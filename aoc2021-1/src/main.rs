@@ -37,7 +37,6 @@ fn stage_zero(input: &Vec<u16>) -> Vec<u16> {
 }
 
 fn main() {
-    let _preview_input: Vec<u16> = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
     let input: Vec<u16> = fs::read_to_string("input")
         .expect("couldn't read the file")
         .lines()
@@ -49,4 +48,22 @@ fn main() {
 
     let second = stage_one(&stage_zero(&input));
     println!("part 2: there were {} increases", second.len());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn stage_one_works() {
+        let input: Vec<u16> = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+        let output = stage_one(&input);
+        assert_eq!(output.len(), 7);
+    }
+
+    #[test]
+    fn stage_zero_works() {
+        let input: Vec<u16> = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+        let output = stage_one(&stage_zero(&input));
+        assert_eq!(output.len(), 5);
+    }
 }

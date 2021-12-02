@@ -8,7 +8,12 @@ fn main() {
         .collect();
 
     let start = (0, 0);
-    let (x, y) = execute_movements(input, start);
+    let (x, y) = p1_execute_movements(input.clone(), start);
+    dbg!(x, y);
+    dbg!(x as u32 * y as u32);
+
+    let start = (0, 0, 0);
+    let (x, y, _a) = p2_execute_movements(input.clone(), start);
     dbg!(x, y);
     dbg!(x as u32 * y as u32);
 }
@@ -25,7 +30,7 @@ fn parse_movement(string: String) -> (String, u16) {
     (direction, distance)
 }
 
-fn execute_movement(movement: String, position: (u16, u16)) -> (u16, u16) {
+fn p1_execute_movement(movement: String, position: (u16, u16)) -> (u16, u16) {
     let (direction, distance) = parse_movement(movement);
     match direction.as_str() {
         "forward" => (position.0 + distance, position.1),
@@ -35,10 +40,32 @@ fn execute_movement(movement: String, position: (u16, u16)) -> (u16, u16) {
     }
 }
 
-fn execute_movements(movements: Vec<String>, position: (u16, u16)) -> (u16, u16) {
+fn p1_execute_movements(movements: Vec<String>, position: (u16, u16)) -> (u16, u16) {
     let mut pos = position.clone();
     for movement in movements {
-        pos = execute_movement(movement, pos);
+        pos = p1_execute_movement(movement, pos);
+    }
+    pos
+}
+
+fn p2_execute_movement(movement: String, position: (i32, i32, i32)) -> (i32, i32, i32) {
+    let (direction, distance) = parse_movement(movement);
+    match direction.as_str() {
+        "forward" => (
+            position.0 + distance as i32,
+            position.1 + distance as i32 * position.2,
+            position.2,
+        ),
+        "up" => (position.0, position.1, position.2 - distance as i32),
+        "down" => (position.0, position.1, position.2 + distance as i32),
+        _ => position,
+    }
+}
+
+fn p2_execute_movements(movements: Vec<String>, position: (i32, i32, i32)) -> (i32, i32, i32) {
+    let mut pos = position.clone();
+    for movement in movements {
+        pos = p2_execute_movement(movement, pos);
     }
     pos
 }
@@ -56,16 +83,16 @@ mod tests {
     }
 
     #[test]
-    fn execute_movement_works() {
+    fn p1_execute_movement_works() {
         let movement = "forward 5".to_string();
         let start = (0, 0);
-        let (x, y) = execute_movement(movement, start);
+        let (x, y) = p1_execute_movement(movement, start);
         assert_eq!(x, 5);
         assert_eq!(y, 0);
     }
 
     #[test]
-    fn execute_movements_works() {
+    fn p1_execute_movements_works() {
         let input = vec![
             "forward 5".to_string(),
             "down 5".to_string(),
@@ -75,9 +102,36 @@ mod tests {
             "forward 2".to_string(),
         ];
         let start = (0, 0);
-        let (x, y) = execute_movements(input, start);
+        let (x, y) = p1_execute_movements(input, start);
         assert_eq!(x, 15);
         assert_eq!(y, 10);
         assert_eq!(x * y, 150)
+    }
+
+    #[test]
+    fn p2_execute_movement_works() {
+        let movement = "forward 5".to_string();
+        let start = (0, 0, 0);
+        let (x, y, a) = p2_execute_movement(movement, start);
+        assert_eq!(x, 5);
+        assert_eq!(y, 0);
+        assert_eq!(a, 0);
+    }
+
+    #[test]
+    fn p2_execute_movements_works() {
+        let input = vec![
+            "forward 5".to_string(),
+            "down 5".to_string(),
+            "forward 8".to_string(),
+            "up 3".to_string(),
+            "down 8".to_string(),
+            "forward 2".to_string(),
+        ];
+        let start = (0, 0, 0);
+        let (x, y, _a) = p2_execute_movements(input, start);
+        assert_eq!(x, 15);
+        assert_eq!(y, 60);
+        assert_eq!(x * y, 900);
     }
 }

@@ -1,6 +1,6 @@
 use std::fs;
 
-fn stage_one(input: &Vec<u16>) -> Vec<u16> {
+fn stage_one(input: &[u16]) -> Vec<u16> {
     return input
         .iter()
         .enumerate()
@@ -19,7 +19,7 @@ fn stage_one(input: &Vec<u16>) -> Vec<u16> {
         .collect();
 }
 
-fn stage_zero(input: &Vec<u16>) -> Vec<u16> {
+fn stage_zero(input: &[u16]) -> Vec<u16> {
     return input
         .iter()
         .enumerate()
@@ -27,7 +27,7 @@ fn stage_zero(input: &Vec<u16>) -> Vec<u16> {
             if index > 1 {
                 // check the last three, starting with the third item
                 let slice = &input[index - 2..index + 1];
-                let sum: u16 = slice.into_iter().sum::<u16>();
+                let sum: u16 = slice.iter().sum::<u16>();
                 Some(sum)
             } else {
                 None

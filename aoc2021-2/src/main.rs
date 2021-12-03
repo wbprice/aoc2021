@@ -13,7 +13,7 @@ fn main() {
     dbg!(x as u32 * y as u32);
 
     let start = (0, 0, 0);
-    let (x, y, _a) = p2_execute_movements(input.clone(), start);
+    let (x, y, _a) = p2_execute_movements(input, start);
     dbg!(x, y);
     dbg!(x as u32 * y as u32);
 }
@@ -41,7 +41,7 @@ fn p1_execute_movement(movement: String, position: (u16, u16)) -> (u16, u16) {
 }
 
 fn p1_execute_movements(movements: Vec<String>, position: (u16, u16)) -> (u16, u16) {
-    let mut pos = position.clone();
+    let mut pos = position;
     for movement in movements {
         pos = p1_execute_movement(movement, pos);
     }
@@ -63,7 +63,7 @@ fn p2_execute_movement(movement: String, position: (i32, i32, i32)) -> (i32, i32
 }
 
 fn p2_execute_movements(movements: Vec<String>, position: (i32, i32, i32)) -> (i32, i32, i32) {
-    let mut pos = position.clone();
+    let mut pos = position;
     for movement in movements {
         pos = p2_execute_movement(movement, pos);
     }

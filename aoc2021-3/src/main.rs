@@ -15,10 +15,10 @@ fn main() {
     dbg!(decimal_gamma * decimal_epsilon);
 }
 
-fn count_ones(input: &[String], size: usize) -> Vec<i64> {
+fn aggregate_readings(input: &[String], size: usize) -> Vec<i64> {
     let mut output = vec![0; size];
-    for value in input {
-        for (i, c) in value.chars().enumerate() {
+    for reading in input {
+        for (i, c) in reading.chars().enumerate() {
             if c == '1' {
                 output[i] += 1;
             }
@@ -33,10 +33,10 @@ fn binary_to_decimal(input: String) -> isize {
 }
 
 fn get_gamma_rate(input: &[String], size: usize) -> String {
-    let ones = count_ones(input, size);
+    let aggregates = aggregate_readings(input, size);
     let threshold = input.len() / 2;
     let mut output = "".to_string();
-    for value in ones {
+    for value in aggregates {
         if value > threshold as i64 {
             output.push('1');
         } else {

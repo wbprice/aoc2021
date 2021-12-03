@@ -1,39 +1,27 @@
 use std::fs;
 
 fn stage_one(input: &[u16]) -> Vec<u16> {
-    return input
-        .iter()
-        .enumerate()
-        .filter_map(|(index, value)| {
-            if index > 0 {
-                let last_value = &input[index - 1];
-                if value > last_value {
-                    Some(*value)
-                } else {
-                    None
-                }
+    input
+        .windows(2)
+        .into_iter()
+        .filter_map(|slice| {
+            let first = slice.get(0).unwrap();
+            let second = slice.get(1).unwrap();
+            if second > first {
+                Some(*second)
             } else {
                 None
             }
         })
-        .collect();
+        .collect()
 }
 
 fn stage_zero(input: &[u16]) -> Vec<u16> {
-    return input
-        .iter()
-        .enumerate()
-        .filter_map(|(index, _value)| {
-            if index > 1 {
-                // check the last three, starting with the third item
-                let slice = &input[index - 2..index + 1];
-                let sum: u16 = slice.iter().sum::<u16>();
-                Some(sum)
-            } else {
-                None
-            }
-        })
-        .collect();
+    input
+        .windows(3)
+        .into_iter()
+        .map(|slice| slice.iter().sum::<u16>())
+        .collect()
 }
 
 fn main() {

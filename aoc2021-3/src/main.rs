@@ -109,13 +109,11 @@ mod test {
         assert_eq!(epsilon_rate, "01001");
     }
 
-    /*
     #[test]
     fn it_converts_binary_to_decimal() {
-        let input = "10110";
+        let input = "10110".to_string();
         assert_eq!(binary_to_decimal(input), 22);
     }
-    */
 
     #[test]
     fn it_finds_the_oxygen_rating() {

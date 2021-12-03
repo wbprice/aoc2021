@@ -16,15 +16,15 @@ fn main() {
 }
 
 fn count_ones(input: &[String], size: usize) -> Vec<i64> {
-    let mut acc = vec![0; size];
+    let mut output = vec![0; size];
     for value in input {
         for (i, c) in value.chars().enumerate() {
             if c == '1' {
-                acc[i] += 1;
+                output[i] += 1;
             }
         }
     }
-    acc
+    output
 }
 
 fn binary_to_decimal(input: String) -> isize {
@@ -33,10 +33,9 @@ fn binary_to_decimal(input: String) -> isize {
 }
 
 fn get_gamma_rate(input: &[String], size: usize) -> String {
-    let mut output = "".to_string();
     let ones = count_ones(input, size);
     let threshold = input.len() / 2;
-
+    let mut output = "".to_string();
     for value in ones {
         if value > threshold as i64 {
             output.push('1');

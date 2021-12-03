@@ -5,10 +5,12 @@ fn stage_one(input: &[u16]) -> Vec<u16> {
         .windows(2)
         .into_iter()
         .filter_map(|slice| {
-            let first = slice.get(0).unwrap();
-            let second = slice.get(1).unwrap();
-            if second > first {
-                Some(*second)
+            if let [first, second] = slice {
+                if second > first {
+                    Some(*second)
+                } else {
+                    None
+                }
             } else {
                 None
             }

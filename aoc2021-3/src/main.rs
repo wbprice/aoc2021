@@ -38,11 +38,9 @@ fn aggregate_readings(input: &[String], size: usize) -> Vec<(i64, i64)> {
 
 fn get_gamma_rate(aggregate: &[(i64, i64)]) -> String {
     let mut output = "".to_string();
-    for (zeros, ones) in aggregate {
-        if zeros > ones {
+    for (zeroes, ones) in aggregate {
+        if zeroes > ones {
             output.push('0');
-        } else if ones > zeros {
-            output.push('1');
         } else {
             output.push('1');
         }
@@ -52,10 +50,8 @@ fn get_gamma_rate(aggregate: &[(i64, i64)]) -> String {
 
 fn get_epsilon_rate(aggregate: &[(i64, i64)]) -> String {
     let mut output = "".to_string();
-    for (zeros, ones) in aggregate {
-        if zeros < ones {
-            output.push('0');
-        } else if ones < zeros {
+    for (zeroes, ones) in aggregate {
+        if ones < zeroes {
             output.push('1');
         } else {
             output.push('0');

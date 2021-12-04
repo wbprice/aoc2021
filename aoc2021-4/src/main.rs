@@ -12,23 +12,89 @@ struct Board {
 }
 
 impl Board {
+    fn new(rows: usize, columns: usize, raw: &String) -> Self {
+        Board {
+            rows,
+            columns,
+            raw: raw
+                .split_whitespace()
+                .map(|value| value.parse::<i64>().unwrap())
+                .collect(),
+        }
+    }
+
     fn as_rows(&self) -> Vec<&[i64]> {
         self.raw.chunks(self.rows).collect()
     }
 
     fn as_columns(&self) -> Vec<Vec<i64>> {
         let mut output: Vec<Vec<i64>> = vec![];
-        //
+        // Create n number of column vectors
         for _ in 0..self.columns {
             output.push(vec![])
         }
 
+        // Populate each column vector
         for (index, value) in self.raw.clone().iter().enumerate() {
             let col_index = index % self.columns;
             output[col_index].push(*value);
         }
 
         output
+    }
+
+    fn is_winner(&self, moves: &[i64]) -> bool {
+        // Check for horizontal wins
+        for row in self.as_rows() {
+            let row = row.to_vec();
+            let marked_cells: Vec<i64> = row
+                .iter()
+                .filter_map(|cell| {
+                    if moves.contains(cell) {
+                        Some(*cell)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            if marked_cells.len() == self.columns {
+                return true;
+            }
+        }
+
+        // Check for vertical wins
+        for column in self.as_columns() {
+            let column = column.to_vec();
+            let marked_cells: Vec<i64> = column
+                .iter()
+                .filter_map(|cell| {
+                    if moves.contains(cell) {
+                        Some(*cell)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            if marked_cells.len() == self.rows {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn get_score(&self, moves: &[i64]) -> i64 {
+        self.raw
+            .clone()
+            .iter()
+            .filter_map(|value| {
+                if !moves.contains(value) {
+                    Some(*value)
+                } else {
+                    None
+                }
+            })
+            .sum()
     }
 }
 
@@ -44,17 +110,6 @@ fn get_moves(input: &String) -> Vec<i64> {
         .split(",")
         .map(|value| value.parse::<i64>().unwrap())
         .collect()
-}
-
-fn get_board(rows: usize, columns: usize, input: &String) -> Board {
-    Board {
-        rows,
-        columns,
-        raw: input
-            .split_whitespace()
-            .map(|value| value.parse::<i64>().unwrap())
-            .collect(),
-    }
 }
 
 #[cfg(test)]
@@ -104,7 +159,7 @@ mod test {
 1 12 20 15 19
 "#
         .to_string();
-        let board = get_board(5, 5, &input);
+        let board = Board::new(5, 5, &input);
         assert_eq!(board.rows, 5);
         assert_eq!(board.columns, 5);
         assert_eq!(board.raw.len(), 25);
@@ -120,7 +175,7 @@ mod test {
 1 12 20 15 19
 "#
         .to_string();
-        let board = get_board(5, 5, &input);
+        let board = Board::new(5, 5, &input);
         let rows = board.as_rows();
         assert_eq!(rows[0], [22, 13, 17, 11, 0]);
         assert_eq!(rows[1], [8, 2, 23, 4, 24]);
@@ -140,7 +195,7 @@ mod test {
 1 12 20 15 19
 "#
         .to_string();
-        let board = get_board(5, 5, &input);
+        let board = Board::new(5, 5, &input);
         let columns = board.as_columns();
         assert_eq!(columns[0], [22, 8, 21, 6, 1]);
         assert_eq!(columns[1], [13, 2, 9, 10, 12]);
@@ -148,5 +203,40 @@ mod test {
         assert_eq!(columns[3], [11, 4, 16, 18, 15]);
         assert_eq!(columns[4], [0, 24, 7, 5, 19]);
         assert_eq!(columns.len(), 5);
+    }
+
+    #[test]
+    fn it_checks_if_the_board_is_a_winner() {
+        let moves_string = "7,4,9,5,11,17,23,2,0,14,21,24".to_string();
+        let board_string = r#"
+14 21 17 24  4
+10 16 15  9 19
+18  8 23 26 20
+22 11 13  6  5
+ 2  0 12  3  7
+"#
+        .to_string();
+
+        let moves = get_moves(&moves_string);
+        let board = Board::new(5, 5, &board_string);
+        assert_eq!(board.is_winner(&moves), true);
+    }
+
+    #[test]
+    fn it_gets_a_boards_score() {
+        let moves_string = "7,4,9,5,11,17,23,2,0,14,21,24".to_string();
+        let board_string = r#"
+14 21 17 24  4
+10 16 15  9 19
+18  8 23 26 20
+22 11 13  6  5
+ 2  0 12  3  7
+"#
+        .to_string();
+
+        let moves = get_moves(&moves_string);
+        let board = Board::new(5, 5, &board_string);
+        assert_eq!(board.is_winner(&moves), true);
+        assert_eq!(board.get_score(&moves), 188);
     }
 }

@@ -21,7 +21,7 @@ struct Board {
 }
 
 impl Board {
-    fn new(rows: usize, columns: usize, raw: &String) -> Self {
+    fn new(rows: usize, columns: usize, raw: &str) -> Self {
         Board {
             id: Uuid::new_v4(),
             rows,
@@ -109,21 +109,21 @@ impl Board {
     }
 }
 
-fn split_input_by_blankline(input: &String) -> Vec<String> {
+fn split_input_by_blankline(input: &str) -> Vec<String> {
     input
         .split("\n\n")
         .map(|string| string.to_string())
         .collect()
 }
 
-fn get_moves(input: &String) -> Vec<i64> {
+fn get_moves(input: &str) -> Vec<i64> {
     input
-        .split(",")
+        .split(',')
         .map(|value| value.parse::<i64>().unwrap())
         .collect()
 }
 
-fn part_one(input: &String) -> i64 {
+fn part_one(input: &str) -> i64 {
     let inputs = split_input_by_blankline(input);
     // Get the moves
     let moves = get_moves(&inputs[0]);
@@ -146,7 +146,7 @@ fn part_one(input: &String) -> i64 {
     -1
 }
 
-fn part_two(input: &String) -> i64 {
+fn part_two(input: &str) -> i64 {
     let inputs = split_input_by_blankline(input);
     // Get the moves
     let moves = get_moves(&inputs[0]);
@@ -172,13 +172,7 @@ fn part_two(input: &String) -> i64 {
 
         boards = boards
             .into_iter()
-            .filter_map(|board| {
-                if !boards_to_remove.contains(&board.id) {
-                    Some(board)
-                } else {
-                    None
-                }
-            })
+            .filter(|board| !boards_to_remove.contains(&board.id))
             .collect();
     }
 

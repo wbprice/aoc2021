@@ -58,14 +58,8 @@ impl Board {
         for row in self.as_rows() {
             let row = row.to_vec();
             let marked_cells: Vec<i64> = row
-                .iter()
-                .filter_map(|cell| {
-                    if moves.contains(cell) {
-                        Some(*cell)
-                    } else {
-                        None
-                    }
-                })
+                .into_iter()
+                .filter(|cell| moves.contains(cell))
                 .collect();
 
             if marked_cells.len() == self.columns {
@@ -77,14 +71,8 @@ impl Board {
         for column in self.as_columns() {
             let column = column.to_vec();
             let marked_cells: Vec<i64> = column
-                .iter()
-                .filter_map(|cell| {
-                    if moves.contains(cell) {
-                        Some(*cell)
-                    } else {
-                        None
-                    }
-                })
+                .into_iter()
+                .filter(|cell| moves.contains(cell))
                 .collect();
             if marked_cells.len() == self.rows {
                 return true;

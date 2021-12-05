@@ -1,5 +1,6 @@
 use std::fs;
 use std::vec;
+use uuid::Uuid;
 
 fn main() {
     let input: String = fs::read_to_string("input").expect("couldn't read the file");
@@ -11,8 +12,9 @@ fn main() {
     dbg!(part_two);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Board {
+    id: Uuid,
     rows: usize,
     columns: usize,
     raw: Vec<i64>,
@@ -21,6 +23,7 @@ struct Board {
 impl Board {
     fn new(rows: usize, columns: usize, raw: &String) -> Self {
         Board {
+            id: Uuid::new_v4(),
             rows,
             columns,
             raw: raw
@@ -135,7 +138,7 @@ fn part_one(input: &String) -> i64 {
         for board in &boards {
             if board.is_winner(&moves[0..index]) {
                 let score = board.get_score(&moves[0..index]);
-                let last_number = &moves[0..index].last().unwrap();
+                let last_number = &moves[index - 1];
                 return score * *last_number;
             }
         }
@@ -154,23 +157,31 @@ fn part_two(input: &String) -> i64 {
     }
 
     for index in 0..moves.len() {
-        let mut to_remove: Vec<usize> = vec![];
-        for (board_index, board) in boards.iter().enumerate() {
+        let mut boards_to_remove: Vec<Uuid> = vec![];
+        for board in &boards {
             // Otherwise, check if Increment winners
             if board.is_winner(&moves[0..index]) {
                 if boards.len() == 1 {
                     let score = board.get_score(&moves[0..index]);
-                    let last_number = &moves[0..index].last().unwrap();
+                    let last_number = &moves[index - 1];
                     return score * *last_number;
                 }
-
-                to_remove.push(board_index);
+                boards_to_remove.push(board.id);
             }
         }
-        for index in to_remove {
-            boards.remove(index);
-        }
+
+        boards = boards
+            .into_iter()
+            .filter_map(|board| {
+                if !boards_to_remove.contains(&board.id) {
+                    Some(board)
+                } else {
+                    None
+                }
+            })
+            .collect();
     }
+
     -1
 }
 

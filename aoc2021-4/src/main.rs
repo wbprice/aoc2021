@@ -1,7 +1,12 @@
+use std::fs;
 use std::vec;
 
 fn main() {
     println!("Hello, world!");
+    let input: String = fs::read_to_string("input").expect("couldn't read the file");
+
+    let part_one = part_one(&input);
+    dbg!(part_one);
 }
 
 #[derive(Debug)]

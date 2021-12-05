@@ -112,6 +112,29 @@ fn get_moves(input: &String) -> Vec<i64> {
         .collect()
 }
 
+fn part_one(input: &String) -> i64 {
+    let inputs = split_input_by_blankline(input);
+    // Get the moves
+    let moves = get_moves(&inputs[0]);
+
+    // Build the boards
+    let mut boards: Vec<Board> = vec![];
+    for board_string in &inputs[1..] {
+        boards.push(Board::new(5, 5, board_string));
+    }
+
+    for index in 0..moves.len() {
+        for board in &boards {
+            if board.is_winner(&moves[0..index]) {
+                let score = board.get_score(&moves[0..index]);
+                let last_number = moves[index - 1];
+                return score * last_number;
+            }
+        }
+    }
+    0
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -238,5 +261,31 @@ mod test {
         let board = Board::new(5, 5, &board_string);
         assert_eq!(board.is_winner(&moves), true);
         assert_eq!(board.get_score(&moves), 188);
+    }
+
+    #[test]
+    fn it_finds_the_first_winning_board() {
+        let input = r#"7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
+
+22 13 17 11  0
+8  2 23  4 24
+21  9 14 16  7
+6 10  3 18  5
+1 12 20 15 19
+
+3 15  0  2 22
+9 18 13 17  5
+19  8  7 25 23
+20 11 10 24  4
+14 21 16 12  6
+
+14 21 17 24  4
+10 16 15  9 19
+18  8 23 26 20
+22 11 13  6  5
+2  0 12  3  7"#
+            .to_string();
+        let output = part_one(&input);
+        assert_eq!(output, 4512);
     }
 }

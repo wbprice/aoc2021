@@ -86,13 +86,7 @@ impl Board {
         self.raw
             .clone()
             .iter()
-            .filter_map(|value| {
-                if !moves.contains(value) {
-                    Some(*value)
-                } else {
-                    None
-                }
-            })
+            .filter(|value| !moves.contains(value))
             .sum()
     }
 }

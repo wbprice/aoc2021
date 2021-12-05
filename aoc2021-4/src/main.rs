@@ -45,7 +45,7 @@ impl Board {
         }
 
         // Populate each column vector
-        for (index, value) in self.raw.clone().iter().enumerate() {
+        for (index, value) in self.raw.iter().enumerate() {
             let col_index = index % self.columns;
             output[col_index].push(*value);
         }
@@ -83,11 +83,7 @@ impl Board {
     }
 
     fn get_score(&self, moves: &[i64]) -> i64 {
-        self.raw
-            .clone()
-            .iter()
-            .filter(|value| !moves.contains(value))
-            .sum()
+        self.raw.iter().filter(|value| !moves.contains(value)).sum()
     }
 }
 
@@ -105,7 +101,31 @@ fn get_moves(input: &str) -> Vec<i64> {
         .collect()
 }
 
-fn part_one(input: &str) -> i64 {
+fn part_one(input: &str) -> Option<i64> {
+    let inputs = split_input_by_blankline(input);
+    // Get the moves
+    let moves = get_moves(&inputs[0]);
+
+    // Build the boards
+    let mut boards: Vec<Board> = vec![];
+    for board_string in &inputs[1..] {
+        boards.push(Board::new(5, 5, board_string));
+    }
+
+    // Get the first board to win
+    for index in 0..moves.len() {
+        for board in &boards {
+            if board.is_winner(&moves[0..index]) {
+                let score = board.get_score(&moves[0..index]);
+                let last_number = &moves[index - 1];
+                return Some(score * last_number);
+            }
+        }
+    }
+    None
+}
+
+fn part_two(input: &str) -> Option<i64> {
     let inputs = split_input_by_blankline(input);
     // Get the moves
     let moves = get_moves(&inputs[0]);
@@ -117,48 +137,28 @@ fn part_one(input: &str) -> i64 {
     }
 
     for index in 0..moves.len() {
-        for board in &boards {
-            if board.is_winner(&moves[0..index]) {
-                let score = board.get_score(&moves[0..index]);
-                let last_number = &moves[index - 1];
-                return score * *last_number;
-            }
-        }
-    }
-    -1
-}
-
-fn part_two(input: &str) -> i64 {
-    let inputs = split_input_by_blankline(input);
-    // Get the moves
-    let moves = get_moves(&inputs[0]);
-
-    let mut boards: Vec<Board> = vec![];
-    for board_string in &inputs[1..] {
-        boards.push(Board::new(5, 5, board_string));
-    }
-
-    for index in 0..moves.len() {
         let mut boards_to_remove: Vec<Uuid> = vec![];
+        // Check each board to see if they won this turn
         for board in &boards {
-            // Otherwise, check if Increment winners
             if board.is_winner(&moves[0..index]) {
+                // If this is the last board, this is what we're looking for
                 if boards.len() == 1 {
                     let score = board.get_score(&moves[0..index]);
                     let last_number = &moves[index - 1];
-                    return score * *last_number;
+                    return Some(score * last_number);
                 }
+                // Otherwise, add this to the list of boards to remove
                 boards_to_remove.push(board.id);
             }
         }
 
+        // Update the list of boards, less any that should be removed
         boards = boards
             .into_iter()
             .filter(|board| !boards_to_remove.contains(&board.id))
             .collect();
     }
-
-    -1
+    None
 }
 
 #[cfg(test)]
@@ -312,7 +312,7 @@ mod test {
 2  0 12  3  7"#
             .to_string();
         let output = part_one(&input);
-        assert_eq!(output, 4512);
+        assert_eq!(output, Some(4512));
     }
 
     #[test]
@@ -338,6 +338,6 @@ mod test {
 2  0 12  3  7"#
             .to_string();
         let output = part_two(&input);
-        assert_eq!(output, 1924);
+        assert_eq!(output, Some(1924));
     }
 }

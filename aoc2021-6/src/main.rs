@@ -36,22 +36,22 @@ fn fish_simulator(input: &[u8], duration: u32) -> HashMap<u8, u64> {
             next_lake.insert(timer, 0);
         }
 
-        // Decrement the timer for each fish
+        // For each set of fish with the same timer value...
         let mut timers: Vec<u8> = lake.clone().into_keys().collect();
         timers.sort_unstable();
         timers.reverse();
         for timer in timers {
-            // How many fish are in this timer group?
             if let Some(&count) = lake.get(&timer) {
-                // Will they spawn a new fish?
+                // Is it time to spawn a new fish yet?
                 if timer > 0 {
                     next_lake.insert(timer - 1, count);
                 } else {
-                    // Reset the timer for each of the zero-timer fish
+                    // Mom is in the delivery room
                     if let Some(&new_moms) = next_lake.get(&6) {
                         next_lake.insert(6, new_moms + count);
                     }
 
+                    // A new fish is born!
                     if let Some(&newborns) = next_lake.get(&8) {
                         next_lake.insert(8, newborns + count);
                     }

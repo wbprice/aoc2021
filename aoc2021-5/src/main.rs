@@ -55,6 +55,29 @@ fn fill_in_line(line: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
                 output.push(vec![x1, y]);
             }
         }
+    } else if i32::abs(x2 - x1) > 0 && i32::abs(y2 - y1) > 0 {
+        // Oh yikes, a diagonal line!
+        if x1 < x2 && y1 < y2 {
+            // 45 degrees
+            for (i, _y) in (y1..y2 + 1).enumerate() {
+                output.push(vec![x1 + i as i32, y1 + i as i32]);
+            }
+        } else if x1 > x2 && y1 < y2 {
+            // 135 degrees
+            for (i, _x) in (x2..x1 + 1).enumerate() {
+                output.push(vec![x1 - i as i32, y1 + i as i32]);
+            }
+        } else if x1 > x2 && y1 > y2 {
+            // 225 degrees
+            for (i, _y) in (x2..y1 + 1).enumerate() {
+                output.push(vec![x1 - i as i32, y1 - i as i32]);
+            }
+        } else if x1 < x2 && y1 > y2 {
+            // 315 degrees
+            for (i, _y) in (y2..y1 + 1).enumerate() {
+                output.push(vec![x1 + i as i32, y1 - i as i32]);
+            }
+        }
     }
 
     output
@@ -72,7 +95,6 @@ fn count_overlapping_cells(input: &[String]) -> Option<i32> {
 
     // Flatten out the lines into a single collection of x,y coordinate pairs
     let cells = lines.concat();
-
     // Update overlaps with each x,y coordinate pair, noting how many times
     // a coordinate pair appears in cells
     for cell in cells {
@@ -87,7 +109,7 @@ fn count_overlapping_cells(input: &[String]) -> Option<i32> {
     }
 
     // Check how many x,y coordinate pairs appeared in cells more than once.
-    let overlaps: Vec<i32> = cell_map.into_values().filter(|&value| value > 1).collect();
+    let overlaps: Vec<i32> = cell_map.into_values().filter(|&value| value >= 2).collect();
     Some(overlaps.len() as i32)
 }
 
@@ -149,6 +171,50 @@ mod test {
     }
 
     #[test]
+    fn it_fills_in_the_45_degree_line() {
+        let input = "1,1 -> 3,3".to_string();
+        let pair = parse_line_pairs(&input);
+        let output = fill_in_line(pair);
+        assert_eq!(output.len(), 3);
+        assert_eq!(output[0], vec![1, 1]);
+        assert_eq!(output[1], vec![2, 2]);
+        assert_eq!(output[2], vec![3, 3]);
+    }
+
+    #[test]
+    fn it_fills_in_the_135_degree_line() {
+        let input = "9,7 -> 7,9".to_string();
+        let pair = parse_line_pairs(&input);
+        let output = fill_in_line(pair);
+        assert_eq!(output.len(), 3);
+        assert_eq!(output[0], vec![9, 7]);
+        assert_eq!(output[1], vec![8, 8]);
+        assert_eq!(output[2], vec![7, 9]);
+    }
+
+    #[test]
+    fn it_fills_in_the_225_degree_line() {
+        let input = "0,0 -> -2,-2".to_string();
+        let pair = parse_line_pairs(&input);
+        let output = fill_in_line(pair);
+        assert_eq!(output.len(), 3);
+        assert_eq!(output[0], vec![0, 0]);
+        assert_eq!(output[1], vec![-1, -1]);
+        assert_eq!(output[2], vec![-2, -2]);
+    }
+
+    #[test]
+    fn it_fills_in_the_315_degree_line() {
+        let input = "0,0 -> 2,-2".to_string();
+        let pair = parse_line_pairs(&input);
+        let output = fill_in_line(pair);
+        assert_eq!(output.len(), 3);
+        assert_eq!(output[0], vec![0, 0]);
+        assert_eq!(output[1], vec![1, -1]);
+        assert_eq!(output[2], vec![2, -2]);
+    }
+
+    #[test]
     fn it_counts_overlapping_cells() {
         let input: Vec<String> = r#"0,9 -> 5,9
 8,0 -> 0,8
@@ -166,6 +232,6 @@ mod test {
         .collect();
 
         let output = count_overlapping_cells(&input);
-        assert_eq!(output, Some(5));
+        assert_eq!(output, Some(12));
     }
 }

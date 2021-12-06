@@ -4,7 +4,7 @@ use std::fs;
 fn main() {
     let initial_state: Vec<u8> = fs::read_to_string("input")
         .expect("couldn't read the input file")
-        .split(",")
+        .split(',')
         .map(|value| value.parse().unwrap())
         .collect();
 

@@ -61,7 +61,7 @@ fn fish_simulator(input: &[u8], duration: u32) -> HashMap<u8, u64> {
             }
         }
 
-        // Update the lake for the next iteration
+        // Tomorrow's lake is ready
         lake = next_lake;
     }
 

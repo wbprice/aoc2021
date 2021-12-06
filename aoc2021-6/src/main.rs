@@ -49,13 +49,13 @@ fn fish_simulator(input: &[u8], duration: u32) -> HashMap<u8, u64> {
                     next_lake.insert(timer - 1, count);
                 } else {
                     // New mom is in the delivery room
-                    if let Some(&new_moms) = next_lake.get(&6) {
-                        next_lake.insert(6, new_moms + count);
+                    if let Some(new_moms) = next_lake.get_mut(&6) {
+                        *new_moms += count;
                     }
 
                     // A new fish is born!
-                    if let Some(&newborns) = next_lake.get(&8) {
-                        next_lake.insert(8, newborns + count);
+                    if let Some(newborns) = next_lake.get_mut(&8) {
+                        *newborns += count;
                     }
                 }
             }

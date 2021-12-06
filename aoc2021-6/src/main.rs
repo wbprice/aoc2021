@@ -31,6 +31,7 @@ fn fish_simulator(input: &[u8], duration: u32) -> HashMap<u8, u64> {
 
     // Run the simulation
     for _day in 0..duration {
+        // Create tomorrow's lake
         let mut next_lake: HashMap<u8, u64> = HashMap::new();
         for timer in 0..9 {
             next_lake.insert(timer, 0);
@@ -44,9 +45,10 @@ fn fish_simulator(input: &[u8], duration: u32) -> HashMap<u8, u64> {
             if let Some(&count) = lake.get(&timer) {
                 // Is it time to spawn a new fish yet?
                 if timer > 0 {
+                    // Not yet
                     next_lake.insert(timer - 1, count);
                 } else {
-                    // Mom is in the delivery room
+                    // New mom is in the delivery room
                     if let Some(&new_moms) = next_lake.get(&6) {
                         next_lake.insert(6, new_moms + count);
                     }

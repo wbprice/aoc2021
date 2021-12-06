@@ -69,7 +69,7 @@ fn fill_in_line(line: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
             }
         } else if x1 > x2 && y1 > y2 {
             // 225 degrees
-            for (i, _y) in (x2..y1 + 1).enumerate() {
+            for (i, _y) in (x2..x1 + 1).enumerate() {
                 output.push(vec![x1 - i as i32, y1 - i as i32]);
             }
         } else if x1 < x2 && y1 > y2 {

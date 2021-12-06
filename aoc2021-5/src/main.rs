@@ -32,9 +32,9 @@ fn fill_in_line(line: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
     let x2 = line[1][0];
     let y2 = line[1][1];
 
-    // Is this a vertical or a horizontal line?
+    // What kind of line is this?
     if i32::abs(y2 - y1) == 0 {
-        // horizontal
+        // a horizontal line
         if x1 < x2 {
             for x in x1..x2 + 1 {
                 output.push(vec![x, y1]);
@@ -45,7 +45,7 @@ fn fill_in_line(line: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
             }
         }
     } else if i32::abs(x2 - x1) == 0 {
-        // vertical
+        // a vertical line
         if y1 < y2 {
             for y in y1..y2 + 1 {
                 output.push(vec![x1, y]);
@@ -56,7 +56,7 @@ fn fill_in_line(line: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
             }
         }
     } else if i32::abs(x2 - x1) > 0 && i32::abs(y2 - y1) > 0 {
-        // Oh yikes, a diagonal line!
+        // A diagonal line!
         if x1 < x2 && y1 < y2 {
             // 45 degrees
             for (i, _y) in (y1..y2 + 1).enumerate() {
@@ -109,7 +109,7 @@ fn count_overlapping_cells(input: &[String]) -> Option<i32> {
     }
 
     // Check how many x,y coordinate pairs appeared in cells more than once.
-    let overlaps: Vec<i32> = cell_map.into_values().filter(|&value| value >= 2).collect();
+    let overlaps: Vec<i32> = cell_map.into_values().filter(|&value| value > 1).collect();
     Some(overlaps.len() as i32)
 }
 

@@ -1,5 +1,15 @@
+use std::collections::HashMap;
+use std::fs;
+
 fn main() {
-    println!("Hello, world!");
+    let input: Vec<String> = fs::read_to_string("input")
+        .expect("couldn't read the file")
+        .lines()
+        .map(|line| line.parse().expect("couldn't parse line"))
+        .collect();
+
+    let overlapping_cells = count_overlapping_cells(&input).unwrap();
+    dbg!(overlapping_cells);
 }
 
 fn parse_line_pairs(input: &str) -> Vec<Vec<i32>> {
@@ -50,18 +60,35 @@ fn fill_in_line(line: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
     output
 }
 
-fn part_one(input: &Vec<String>) -> Option<i32> {
-    dbg!(input);
+fn count_overlapping_cells(input: &[String]) -> Option<i32> {
+    let mut cell_map: HashMap<Vec<i32>, i32> = HashMap::new();
 
+    // Build out all the lines
     let lines: Vec<Vec<Vec<i32>>> = input
         .iter()
         .map(|value| parse_line_pairs(value))
-        .map(|value| fill_in_line(value))
+        .map(fill_in_line)
         .collect();
 
-    dbg!(lines);
+    // Flatten out the lines into a single collection of x,y coordinate pairs
+    let cells = lines.concat();
 
-    None
+    // Update overlaps with each x,y coordinate pair, noting how many times
+    // a coordinate pair appears in cells
+    for cell in cells {
+        match cell_map.get(&cell) {
+            Some(&value) => {
+                cell_map.insert(cell, value + 1);
+            }
+            None => {
+                cell_map.insert(cell, 1);
+            }
+        }
+    }
+
+    // Check how many x,y coordinate pairs appeared in cells more than once.
+    let overlaps: Vec<i32> = cell_map.into_values().filter(|&value| value > 1).collect();
+    Some(overlaps.len() as i32)
 }
 
 #[cfg(test)]
@@ -122,7 +149,7 @@ mod test {
     }
 
     #[test]
-    fn it_counts_overlapping_line_cells() {
+    fn it_counts_overlapping_cells() {
         let input: Vec<String> = r#"0,9 -> 5,9
 8,0 -> 0,8
 9,4 -> 3,4
@@ -138,7 +165,7 @@ mod test {
         .map(|line| line.parse().expect("couldn't parse line"))
         .collect();
 
-        let output = part_one(&input);
+        let output = count_overlapping_cells(&input);
         assert_eq!(output, Some(5));
     }
 }

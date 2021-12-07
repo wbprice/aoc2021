@@ -46,26 +46,20 @@ fn calculate_alignment_fuel_cost(input: &[i32], destination: i32) -> i32 {
 
 fn chart_cheapest_alignment_destination_v2(input: &[i32]) -> i32 {
     let min = input.iter().min().expect("Couldn't find the minimum");
-    let max = input.iter().min().expect("Couldn't find the maximum");
+    let max = input.iter().max().expect("Couldn't find the maximum");
 
     // Calcuate the fuel cost for each destination
     let mut fuel_costs: HashMap<i32, i32> = HashMap::new();
-    // For each position in input
-    for position in input {
-        // For each possible destination between min and max
-        for destination in *min..*max {
-            // Calculate the cost of moving the crab to those locations
-            if fuel_costs.get(&destination).is_none() {
-
-                let steps = i32::abs(position - destination);
-                let cost = (0..steps).sum::<i32>();
-                fuel_costs.insert(cost, destination);
-
-            }
+    // For each possible destination
+    for destination in *min..*max {
+        // Calculate how expensive it would be to move everyone there
+        if fuel_costs.get(&destination).is_none() {
+            fuel_costs.insert(
+                calculate_alignment_fuel_cost_v2(input, destination),
+                destination,
+            );
         }
     }
-
-    dbg!(&fuel_costs);
 
     // Return the position that is cheapest for everyone to travel to
     let lowest_cost = fuel_costs.clone().into_keys().min().unwrap();

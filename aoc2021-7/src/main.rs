@@ -44,11 +44,10 @@ fn get_cheapest_destination_cost_v2(input: &[i32]) -> Option<i32> {
     let min = input.iter().min().expect("Couldn't find the minimum");
     let max = input.iter().max().expect("Couldn't find the maximum");
 
-    // Calcuate the fuel cost for each destination
     let mut fuel_costs: HashMap<i32, i32> = HashMap::new();
-    // For each possible destination
+    // Calcuate the fuel cost for each possible destination
     for destination in *min..*max {
-        // Calculate how expensive it would be to move everyone there
+        // How expensive is it to move everyone there?
         if fuel_costs.get(&destination).is_none() {
             fuel_costs.insert(
                 calculate_destination_fuel_cost_v2(input, destination),

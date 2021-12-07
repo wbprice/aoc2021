@@ -26,8 +26,6 @@ fn chart_cheapest_alignment_destination(input: &[i32]) -> i32 {
         }
     }
 
-    dbg!(&fuel_costs);
-
     // Return the position that is cheapest for everyone to travel to
     let lowest_cost = fuel_costs.clone().into_keys().min().unwrap();
     let dest = fuel_costs.get(&lowest_cost).unwrap();

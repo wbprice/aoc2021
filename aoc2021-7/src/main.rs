@@ -18,8 +18,8 @@ fn main() {
 }
 
 fn chart_cheapest_alignment_destination(input: &[i32]) -> i32 {
-    let mut fuel_costs: HashMap<i32, i32> = HashMap::new();
     // Calcuate the fuel cost for each destination
+    let mut fuel_costs: HashMap<i32, i32> = HashMap::new();
     for destination in input {
         if fuel_costs.get(destination).is_none() {
             let cost = calculate_alignment_fuel_cost(input, *destination);

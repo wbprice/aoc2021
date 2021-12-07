@@ -12,16 +12,17 @@ fn main() {
         })
         .collect();
 
-    let cheapest_dest = chart_cheapest_alignment_destination(&initial_state);
-    dbg!(cheapest_dest);
+    let dest = chart_cheapest_alignment_destination(&initial_state);
+    let cost = calculate_alignment_fuel_cost(&initial_state, dest);
+    dbg!(cost);
 }
 
 fn chart_cheapest_alignment_destination(input: &[i32]) -> i32 {
     let mut fuel_costs: HashMap<i32, i32> = HashMap::new();
     // Calcuate the fuel cost for each destination
     for destination in input {
-        if let None = fuel_costs.get(destination) {
-            let cost = calculate_alignment_fuel_cost(&input, *destination);
+        if fuel_costs.get(destination).is_none() {
+            let cost = calculate_alignment_fuel_cost(input, *destination);
             fuel_costs.insert(cost, *destination);
         }
     }
@@ -42,7 +43,6 @@ fn calculate_alignment_fuel_cost(input: &[i32], destination: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn it_calculates_the_fuel_cost_to_align_crabs() {
         let input: Vec<i32> = "16,1,2,0,4,2,7,1,2,14"

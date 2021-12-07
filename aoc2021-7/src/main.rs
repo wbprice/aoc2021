@@ -65,7 +65,7 @@ fn calculate_destination_fuel_cost_v2(input: &[i32], destination: i32) -> i32 {
         .iter()
         .map(|&value| {
             let steps = i32::abs(value - destination);
-            (0..steps + 1).sum::<i32>()
+            steps * (steps + 1) / 2
         })
         .sum::<i32>()
 }

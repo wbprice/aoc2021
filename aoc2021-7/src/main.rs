@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 
 fn main() {
-    let initial_state: Vec<i32> = fs::read_to_string("input")
+    let input: Vec<i32> = fs::read_to_string("input")
         .expect("couldn't read the input file")
         .split(',')
         .map(|value| {
@@ -12,10 +12,10 @@ fn main() {
         })
         .collect();
 
-    let cost = get_cheapest_destination_cost(&initial_state);
+    let cost = get_cheapest_destination_cost(&input);
     dbg!(cost);
 
-    let cost = get_cheapest_destination_cost_v2(&initial_state);
+    let cost = get_cheapest_destination_cost_v2(&input);
     dbg!(cost);
 }
 

@@ -53,6 +53,80 @@ fn part_oner(input: &[String]) -> Option<u64> {
     Some(letters.into_values().sum::<u64>())
 }
 
+fn get_pattern_matcher_map() -> HashMap<String, char> {
+    HashMap::from([
+        ("abcdeg".to_string(), '0'),
+        ("ab".to_string(), '1'),
+        ("acdfg".to_string(), '2'),
+        ("abcdf".to_string(), '3'),
+        ("abef".to_string(), '4'),
+        ("bcdef".to_string(), '5'),
+        ("bcdefg".to_string(), '6'),
+        ("abd".to_string(), '7'),
+        ("abcdefg".to_string(), '8'),
+        ("abcdef".to_string(), '9'),
+    ])
+}
+
+fn signal_pattern_matcher(input: String, map: HashMap<String, char>) -> u64 {
+    // let mut characters: Vec<String> = input.split_whitespace().map(|value| value.to_string()).collect();
+    let signals: Vec<String> = input
+        .split_whitespace()
+        .map(|value| value.to_string())
+        .collect();
+
+    let string: String = signals
+        .iter()
+        .map(|signal| {
+            let mut characters: Vec<String> =
+                signal.chars().map(|value| value.to_string()).collect();
+            characters.sort_unstable();
+
+            let sorted = characters
+                .iter()
+                .fold("".to_string(), |acc, value| acc + value);
+
+            dbg!(&sorted);
+            map.get(&sorted)
+                .expect("This value didn't appear in the map")
+        })
+        .collect();
+
+    dbg!(&string);
+
+    string.parse().unwrap()
+}
+
+fn input_descrambler(input: &[String]) -> HashMap<String, char> {
+    let mut output: HashMap<String, char> = HashMap::new();
+    // Figure out where 1, 4, 7, and 8 are:
+    for value in input {
+        match value.len() {
+            2 => {
+                output.insert(value.to_string(), '1');
+            }
+            4 => {
+                output.insert(value.to_string(), '4');
+            }
+            3 => {
+                output.insert(value.to_string(), '7');
+            }
+            7 => {
+                output.insert(value.to_string(), '8');
+            }
+            _ => {
+                // noop
+            }
+        }
+    }
+
+    output
+}
+
+fn output_descrambler(input: String, map: HashMap<String, char>) -> u16 {
+    0
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,5 +173,24 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 
         let output = part_oner(&input);
         assert_eq!(output, Some(26));
+    }
+
+    #[test]
+    fn it_reads_outputs_into_numbers() {
+        let input = "fdgacbe cefdb cefbgd gcbe".to_string();
+        let dictionary = get_pattern_matcher_map();
+        let output = signal_pattern_matcher(input, dictionary);
+    }
+
+    #[test]
+    fn it_descrambles_inputs() {
+        let input: Vec<String> = "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb"
+            .to_string()
+            .split_whitespace()
+            .map(|value| value.to_string())
+            .collect();
+
+        let output = input_descrambler(&input);
+        dbg!(output);
     }
 }

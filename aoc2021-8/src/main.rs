@@ -375,7 +375,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
         assert_eq!(output.get(&9), Some(&"cbdgef".to_string()));
         assert_eq!(output.get(&0), Some(&"agebfd".to_string()));
         assert_eq!(output.get(&8), Some(&"cfbegad".to_string()));
-        assert_eq!(output.get(&2), Some(&"fdcge".to_string()));
+        assert_eq!(output.get(&2), Some(&"fabcd".to_string()));
         assert_eq!(output.get(&5), Some(&"fdcge".to_string()));
     }
 }

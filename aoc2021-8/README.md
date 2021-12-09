@@ -50,14 +50,14 @@ fdcge (__cdefg)
 fecdb (_bcdef_)
 - It has 'edb', so this must be (3)
 
-fdcge (abcd_f_)
+fabcd (abcd_f_)
 - By process of elimination (2)
 
 ### The answer:
 be - 1
 edb - 7
 cgeb - 4
-fdcge - 2
+fabcd - 2
 fecdb - 3
 fdcge - 5
 fgaecd - 6

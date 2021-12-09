@@ -38,17 +38,18 @@ fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
         (position.0 + 1, position.1),
     ];
 
-    // Get the heights of each neighbor
-    let neighbor_heights: Vec<i32> = maybe_neighbors
+    // Get the heights the lowest neighbor
+    let lowest_heighbor: i32 = maybe_neighbors
         .iter()
         .filter_map(|position| match map.get(position) {
             Some(value) => Some(*value),
             None => None,
         })
-        .collect();
+        .min()
+        .expect("Couldn't find lowest neighbor");
 
-    // Compare this position's height against the height of the lowest neighbor
-    height < neighbor_heights.iter().min().unwrap()
+    // Compare this position's height lowest neighbor's height
+    height < &lowest_heighbor
 }
 
 fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {

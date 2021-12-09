@@ -29,7 +29,6 @@ fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
     let height = map
         .get(position)
         .expect("Couldn't get this position, check the map");
-    // A point is a low point if it's value is lower than all of it's neighbors
     // A given point can have as many as 4 or as few as 2 neighbors
     let maybe_neighbors = [
         (position.0, position.1 - 1),

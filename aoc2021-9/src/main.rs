@@ -47,15 +47,8 @@ fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
         })
         .collect();
 
-    // If any neighbor is lower than this point's height,
-    // this can't be a low spot
-    for neighbor_height in neighbor_heights {
-        if neighbor_height < *height {
-            return false;
-        }
-    }
-
-    true
+    // Compare this position's height against the height of the lowest neighbor
+    height < neighbor_heights.iter().min().unwrap()
 }
 
 fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
@@ -66,8 +59,7 @@ fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
 }
 
 fn calculate_low_point_risk(map: &HashMap<(i32, i32), i32>) -> i32 {
-    let low_points = find_low_points(&map);
-    low_points
+    find_low_points(&map)
         .iter()
         .map(|position| map.get(position).expect("Couldn't find value of position") + 1)
         .sum::<i32>()

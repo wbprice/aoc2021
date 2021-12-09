@@ -128,6 +128,14 @@ mod tests {
         let cavern_floor = build_cavern_floor_map(&input);
         let low_points = find_low_points(&cavern_floor);
         assert_eq!(low_points.len(), 4);
+        assert_eq!(low_points.contains(&(1, 0)), true);
+        assert_eq!(low_points.contains(&(9, 0)), true);
+        assert_eq!(low_points.contains(&(2, 2)), true);
+        assert_eq!(low_points.contains(&(6, 4)), true);
+        assert_eq!(cavern_floor.get(&(1, 0)), Some(&1));
+        assert_eq!(cavern_floor.get(&(9, 0)), Some(&0));
+        assert_eq!(cavern_floor.get(&(2, 2)), Some(&5));
+        assert_eq!(cavern_floor.get(&(6, 4)), Some(&5));
     }
 
     #[test]

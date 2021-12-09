@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::fs;
 
 fn main() {
@@ -9,6 +10,9 @@ fn main() {
         .collect();
 
     let output = part_oner(&input);
+    dbg!(output);
+
+    let output = part_twoer(&input);
     dbg!(output);
 }
 
@@ -53,48 +57,19 @@ fn part_oner(input: &[String]) -> Option<u64> {
     Some(letters.into_values().sum::<u64>())
 }
 
-fn get_pattern_matcher_map() -> HashMap<String, char> {
-    HashMap::from([
-        ("abcdeg".to_string(), '0'),
-        ("ab".to_string(), '1'),
-        ("acdfg".to_string(), '2'),
-        ("abcdf".to_string(), '3'),
-        ("abef".to_string(), '4'),
-        ("bcdef".to_string(), '5'),
-        ("bcdefg".to_string(), '6'),
-        ("abd".to_string(), '7'),
-        ("abcdefg".to_string(), '8'),
-        ("abcdef".to_string(), '9'),
-    ])
-}
+fn part_twoer(input: &[String]) -> Option<u64> {
+    let mut output = 0;
 
-fn signal_pattern_matcher(input: String, map: HashMap<String, char>) -> u64 {
-    // let mut characters: Vec<String> = input.split_whitespace().map(|value| value.to_string()).collect();
-    let signals: Vec<String> = input
-        .split_whitespace()
-        .map(|value| value.to_string())
-        .collect();
+    for entry in input {
+        let split = split_entry(&entry);
+        let signals = split.get(0).expect("Couldn't get scrambled signals");
+        let display = split.get(1).expect("Couldn't get scrambled display");
+        let descrambler = get_descrambler(&signals);
+        let value = display_descrambler(&display, &descrambler);
+        output += value;
+    }
 
-    let string: String = signals
-        .iter()
-        .map(|signal| {
-            let mut characters: Vec<String> =
-                signal.chars().map(|value| value.to_string()).collect();
-            characters.sort_unstable();
-
-            let sorted = characters
-                .iter()
-                .fold("".to_string(), |acc, value| acc + value);
-
-            dbg!(&sorted);
-            map.get(&sorted)
-                .expect("This value didn't appear in the map")
-        })
-        .collect();
-
-    dbg!(&string);
-
-    string.parse().unwrap()
+    Some(output)
 }
 
 fn fits_a_four(input: &String, map: &HashMap<u8, String>) -> bool {
@@ -175,12 +150,8 @@ enum Segment {
     LowerRight,
 }
 
-fn get_input_descrambler(input: &[String]) -> HashMap<u8, String> {
+fn get_descrambler_stage0(input: &[String]) -> HashMap<u8, String> {
     let mut output: HashMap<u8, String> = HashMap::new();
-    let mut segments: HashMap<Segment, String> = HashMap::new();
-
-    // Freebies
-    // Figure out where 1, 4, 7, and 8 are:
     for value in input {
         match value.len() {
             2 => {
@@ -200,23 +171,32 @@ fn get_input_descrambler(input: &[String]) -> HashMap<u8, String> {
             }
         }
     }
+    output
+}
+
+fn get_descrambler(input: &[String]) -> HashMap<String, String> {
+    let mut segments: HashMap<Segment, String> = HashMap::new();
+
+    // Freebies
+    // Figure out where 1, 4, 7, and 8 are based on token length
+    let mut scratch = get_descrambler_stage0(&input);
 
     // Derived from freebies
-    // Figure out the 6 segment numbers
+    // First, figure out the 6 segment numbers
     let mut six_segments_found = 0;
     while six_segments_found < 3 {
         for value in input {
             match value.len() {
                 6 => {
-                    if fits_a_four(value, &output) {
-                        output.insert(9, value.to_string());
+                    if fits_a_four(value, &scratch) {
+                        scratch.insert(9, value.to_string());
                         six_segments_found += 1;
-                    } else if !fits_a_four(value, &output) && fits_a_one(value, &output) {
-                        output.insert(0, value.to_string());
+                    } else if !fits_a_four(value, &scratch) && fits_a_one(value, &scratch) {
+                        scratch.insert(0, value.to_string());
                         six_segments_found += 1;
                     } else {
-                        output.insert(6, value.to_string());
-                        let one = output.get(&1).unwrap();
+                        scratch.insert(6, value.to_string());
+                        let one = scratch.get(&1).unwrap();
                         let common = get_common_segments(value, one);
                         segments.insert(Segment::LowerRight, common.get(0).unwrap().to_string());
                         six_segments_found += 1;
@@ -229,20 +209,20 @@ fn get_input_descrambler(input: &[String]) -> HashMap<u8, String> {
         }
     }
 
-    // Figure out the five segment numbers
+    // Next, figure out the five segment numbers
     let mut five_segments_found = 0;
     while five_segments_found < 3 {
         for value in input {
             match value.len() {
                 5 => {
-                    if fits_a_seven(value, &output) {
-                        output.insert(3, value.to_string());
+                    if fits_a_seven(value, &scratch) {
+                        scratch.insert(3, value.to_string());
                         five_segments_found += 1;
                     } else if has_lower_right_segment(value, &segments) {
-                        output.insert(5, value.to_string());
+                        scratch.insert(5, value.to_string());
                         five_segments_found += 1;
                     } else {
-                        output.insert(2, value.to_string());
+                        scratch.insert(2, value.to_string());
                         five_segments_found += 1;
                     }
                 }
@@ -253,11 +233,35 @@ fn get_input_descrambler(input: &[String]) -> HashMap<u8, String> {
         }
     }
 
+    // Invert scratch map for use with the output descrambler
+    let mut output: HashMap<String, String> = HashMap::new();
+    for key in scratch.clone().into_keys() {
+        let mut split: Vec<String> = scratch
+            .get(&key)
+            .expect("Couldn't get key from scratch")
+            .chars()
+            .map(|value| value.to_string())
+            .collect();
+        split.sort_unstable();
+        let k = split.iter().fold("".to_string(), |acc, value| acc + value);
+        let v = format!("{}", key);
+        output.insert(k.to_string(), v);
+    }
+
     output
 }
 
-fn output_descrambler(input: String, map: HashMap<String, char>) -> u16 {
-    0
+fn display_descrambler(input: &[String], map: &HashMap<String, String>) -> u64 {
+    let mut display = "".to_string();
+    for number in input {
+        let mut characters: Vec<String> = number.chars().map(|value| value.to_string()).collect();
+        characters.sort_unstable();
+        let sorted = characters.iter().fold("".to_string(), |acc, x| acc + x);
+        let number = map.get(&sorted).expect("Couldn't find descrambled value");
+        display += &number.to_string();
+    }
+
+    display.parse().unwrap()
 }
 
 #[cfg(test)]
@@ -289,8 +293,7 @@ mod tests {
 
     #[test]
     fn it_counts_ones_fours_sevens_and_eights() {
-        let input: Vec<String> = r#"
-be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+        let input: Vec<String> = r#"be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
 edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
 fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
 fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
@@ -316,7 +319,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
             .map(|value| value.to_string())
             .collect();
 
-        let map = get_input_descrambler(&input);
+        let map = get_descrambler_stage0(&input);
         let output = fits_a_four(&"cbdgef".to_string(), &map);
         assert_eq!(output, true);
 
@@ -332,7 +335,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
             .map(|value| value.to_string())
             .collect();
 
-        let map = get_input_descrambler(&input);
+        let map = get_descrambler_stage0(&input);
         let output = fits_a_seven(&"fecdb".to_string(), &map);
         assert_eq!(output, true);
 
@@ -348,7 +351,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
             .map(|value| value.to_string())
             .collect();
 
-        let map = get_input_descrambler(&input);
+        let map = get_descrambler_stage0(&input);
         let output = fits_a_one(&"agebfd".to_string(), &map);
         assert_eq!(output, true);
 
@@ -357,23 +360,61 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
     }
 
     #[test]
-    fn it_gets_an_input_descrambler() {
+    fn it_gets_a_hash_for_descrambling_output() {
         let input: Vec<String> = "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb"
             .to_string()
             .split_whitespace()
             .map(|value| value.to_string())
             .collect();
 
-        let output = get_input_descrambler(&input);
-        assert_eq!(output.get(&1), Some(&"be".to_string()));
-        assert_eq!(output.get(&7), Some(&"edb".to_string()));
-        assert_eq!(output.get(&4), Some(&"cgeb".to_string()));
-        assert_eq!(output.get(&3), Some(&"fecdb".to_string()));
-        assert_eq!(output.get(&6), Some(&"fgaecd".to_string()));
-        assert_eq!(output.get(&9), Some(&"cbdgef".to_string()));
-        assert_eq!(output.get(&0), Some(&"agebfd".to_string()));
-        assert_eq!(output.get(&8), Some(&"cfbegad".to_string()));
-        assert_eq!(output.get(&2), Some(&"fabcd".to_string()));
-        assert_eq!(output.get(&5), Some(&"fdcge".to_string()));
+        let output = get_descrambler(&input);
+        assert_eq!(output.get(&"be".to_string()), Some(&"1".to_string()));
+        assert_eq!(output.get(&"bde".to_string()), Some(&"7".to_string()));
+        assert_eq!(output.get(&"bceg".to_string()), Some(&"4".to_string()));
+        assert_eq!(output.get(&"bcdef".to_string()), Some(&"3".to_string()));
+        assert_eq!(output.get(&"acdefg".to_string()), Some(&"6".to_string()));
+        assert_eq!(output.get(&"bcdefg".to_string()), Some(&"9".to_string()));
+        assert_eq!(output.get(&"abdefg".to_string()), Some(&"0".to_string()));
+        assert_eq!(output.get(&"abcdefg".to_string()), Some(&"8".to_string()));
+        assert_eq!(output.get(&"abcdf".to_string()), Some(&"2".to_string()));
+        assert_eq!(output.get(&"cdefg".to_string()), Some(&"5".to_string()));
+    }
+
+    #[test]
+    fn it_descrambles_output() {
+        let input: Vec<String> = "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb"
+            .to_string()
+            .split_whitespace()
+            .map(|value| value.to_string())
+            .collect();
+        let display: Vec<String> = "fdgacbe cefdb cefbgd gcbe"
+            .to_string()
+            .split_whitespace()
+            .map(|value| value.to_string())
+            .collect();
+
+        let descrambler = get_descrambler(&input);
+        let output = display_descrambler(&display, &descrambler);
+        assert_eq!(output, 8394);
+    }
+
+    #[test]
+    fn it_sums_scrambled_display_values() {
+        let input: Vec<String> = r#"be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
+aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
+fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
+dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
+bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
+egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
+gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce"#
+                    .lines()
+                    .map(|line| line.to_string())
+                    .collect();
+
+        let output = part_twoer(&input);
+        assert_eq!(output, Some(61229));
     }
 }

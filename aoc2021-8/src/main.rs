@@ -222,12 +222,6 @@ fn get_input_descrambler(input: &[String]) -> HashMap<u8, String> {
                         six_segments_found += 1;
                     }
                 }
-                5 => {
-                    if fits_a_seven(value, &output) {
-                        output.insert(3, value.to_string());
-                        six_segments_found += 1;
-                    }
-                }
                 _ => {
                     // noop
                 }
@@ -245,10 +239,10 @@ fn get_input_descrambler(input: &[String]) -> HashMap<u8, String> {
                         output.insert(3, value.to_string());
                         five_segments_found += 1;
                     } else if has_lower_right_segment(value, &segments) {
-                        output.insert(2, value.to_string());
+                        output.insert(5, value.to_string());
                         five_segments_found += 1;
                     } else {
-                        output.insert(5, value.to_string());
+                        output.insert(2, value.to_string());
                         five_segments_found += 1;
                     }
                 }
@@ -371,6 +365,17 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
             .collect();
 
         let output = get_input_descrambler(&input);
-        dbg!(output);
+        dbg!(&output);
+
+        assert_eq!(output.get(&1), Some(&"be".to_string()));
+        assert_eq!(output.get(&7), Some(&"edb".to_string()));
+        assert_eq!(output.get(&4), Some(&"cgeb".to_string()));
+        assert_eq!(output.get(&3), Some(&"fecdb".to_string()));
+        assert_eq!(output.get(&6), Some(&"fgaecd".to_string()));
+        assert_eq!(output.get(&9), Some(&"cbdgef".to_string()));
+        assert_eq!(output.get(&0), Some(&"agebfd".to_string()));
+        assert_eq!(output.get(&8), Some(&"cfbegad".to_string()));
+        assert_eq!(output.get(&2), Some(&"fdcge".to_string()));
+        assert_eq!(output.get(&5), Some(&"fdcge".to_string()));
     }
 }

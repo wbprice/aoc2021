@@ -357,7 +357,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
     }
 
     #[test]
-    fn it_descrambles_inputs() {
+    fn it_gets_an_input_descrambler() {
         let input: Vec<String> = "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb"
             .to_string()
             .split_whitespace()
@@ -365,8 +365,6 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
             .collect();
 
         let output = get_input_descrambler(&input);
-        dbg!(&output);
-
         assert_eq!(output.get(&1), Some(&"be".to_string()));
         assert_eq!(output.get(&7), Some(&"edb".to_string()));
         assert_eq!(output.get(&4), Some(&"cgeb".to_string()));

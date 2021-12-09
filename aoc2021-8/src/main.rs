@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::fs;
 
 fn main() {
@@ -9,35 +8,19 @@ fn main() {
         .map(|line| line.to_string())
         .collect();
 
-    let output = part_oner(&input);
+    let output = one_four_seven_and_eight_counter(&input);
     dbg!(output);
 
-    let output = part_twoer(&input);
+    let output = scrambled_display_summer(&input);
     dbg!(output);
 }
 
-fn split_entry(input: &String) -> Vec<Vec<String>> {
-    input
-        .split(" | ")
-        .map(|value| {
-            value
-                .split_whitespace()
-                .map(|value| value.to_string())
-                .collect()
-        })
-        .collect()
-}
-
-fn get_display_segment_count(input: &[String]) -> Vec<u8> {
-    input.iter().map(|val| val.len() as u8).collect()
-}
-
-fn part_oner(input: &[String]) -> Option<u64> {
+fn one_four_seven_and_eight_counter(input: &[String]) -> Option<u64> {
     let mut counts: HashMap<u8, u64> = HashMap::new();
     for entry in input {
-        let split = split_entry(&entry);
+        let split = split_entry(entry);
         if let Some(display) = split.get(1) {
-            let display_count = get_display_segment_count(&display);
+            let display_count = get_display_segment_count(display);
             for count in display_count {
                 if let Some(value) = counts.get_mut(&count) {
                     *value += 1;
@@ -57,22 +40,38 @@ fn part_oner(input: &[String]) -> Option<u64> {
     Some(letters.into_values().sum::<u64>())
 }
 
-fn part_twoer(input: &[String]) -> Option<u64> {
+fn scrambled_display_summer(input: &[String]) -> Option<u64> {
     let mut output = 0;
 
     for entry in input {
-        let split = split_entry(&entry);
+        let split = split_entry(entry);
         let signals = split.get(0).expect("Couldn't get scrambled signals");
         let display = split.get(1).expect("Couldn't get scrambled display");
-        let descrambler = get_descrambler(&signals);
-        let value = display_descrambler(&display, &descrambler);
+        let descrambler = get_descrambler(signals);
+        let value = display_descrambler(display, &descrambler);
         output += value;
     }
 
     Some(output)
 }
 
-fn fits_a_four(input: &String, map: &HashMap<u8, String>) -> bool {
+fn split_entry(input: &str) -> Vec<Vec<String>> {
+    input
+        .split(" | ")
+        .map(|value| {
+            value
+                .split_whitespace()
+                .map(|value| value.to_string())
+                .collect()
+        })
+        .collect()
+}
+
+fn get_display_segment_count(input: &[String]) -> Vec<u8> {
+    input.iter().map(|val| val.len() as u8).collect()
+}
+
+fn fits_a_four(input: &str, map: &HashMap<u8, String>) -> bool {
     let four = map.get(&4).unwrap();
     let mut i = 0;
     for c in four.chars() {
@@ -86,7 +85,7 @@ fn fits_a_four(input: &String, map: &HashMap<u8, String>) -> bool {
     i == 4
 }
 
-fn fits_a_seven(input: &String, map: &HashMap<u8, String>) -> bool {
+fn fits_a_seven(input: &str, map: &HashMap<u8, String>) -> bool {
     let seven = map.get(&7).unwrap();
 
     let mut i = 0;
@@ -101,7 +100,7 @@ fn fits_a_seven(input: &String, map: &HashMap<u8, String>) -> bool {
     i == seven.len()
 }
 
-fn fits_a_one(input: &String, map: &HashMap<u8, String>) -> bool {
+fn fits_a_one(input: &str, map: &HashMap<u8, String>) -> bool {
     let one = map.get(&1).unwrap();
 
     let mut i = 0;
@@ -116,7 +115,7 @@ fn fits_a_one(input: &String, map: &HashMap<u8, String>) -> bool {
     i == one.len()
 }
 
-fn has_lower_right_segment(input: &String, map: &HashMap<Segment, String>) -> bool {
+fn has_lower_right_segment(input: &str, map: &HashMap<Segment, String>) -> bool {
     let lower_right = map.get(&Segment::LowerRight).unwrap();
 
     for v in input.chars() {
@@ -128,11 +127,11 @@ fn has_lower_right_segment(input: &String, map: &HashMap<Segment, String>) -> bo
     false
 }
 
-fn get_common_segments(inputA: &String, inputB: &String) -> Vec<String> {
+fn get_common_segments(input_a: &str, input_b: &str) -> Vec<String> {
     let mut output: Vec<String> = vec![];
 
-    for a in inputA.chars() {
-        for b in inputB.chars() {
+    for a in input_a.chars() {
+        for b in input_b.chars() {
             if a == b {
                 output.push(a.to_string());
             }
@@ -144,9 +143,6 @@ fn get_common_segments(inputA: &String, inputB: &String) -> Vec<String> {
 
 #[derive(Eq, PartialEq, Hash)]
 enum Segment {
-    Top,
-    Middle,
-    UpperRight,
     LowerRight,
 }
 
@@ -179,31 +175,29 @@ fn get_descrambler(input: &[String]) -> HashMap<String, String> {
 
     // Freebies
     // Figure out where 1, 4, 7, and 8 are based on token length
-    let mut scratch = get_descrambler_stage0(&input);
+    let mut scratch = get_descrambler_stage0(input);
 
     // Derived from freebies
     // First, figure out the 6 segment numbers
     let mut six_segments_found = 0;
     while six_segments_found < 3 {
         for value in input {
-            match value.len() {
-                6 => {
-                    if fits_a_four(value, &scratch) {
-                        scratch.insert(9, value.to_string());
-                        six_segments_found += 1;
-                    } else if !fits_a_four(value, &scratch) && fits_a_one(value, &scratch) {
-                        scratch.insert(0, value.to_string());
-                        six_segments_found += 1;
-                    } else {
-                        scratch.insert(6, value.to_string());
-                        let one = scratch.get(&1).unwrap();
-                        let common = get_common_segments(value, one);
-                        segments.insert(Segment::LowerRight, common.get(0).unwrap().to_string());
-                        six_segments_found += 1;
-                    }
-                }
-                _ => {
-                    // noop
+            if value.len() == 6 {
+                if fits_a_four(value, &scratch) {
+                    // This is 9
+                    scratch.insert(9, value.to_string());
+                    six_segments_found += 1;
+                } else if !fits_a_four(value, &scratch) && fits_a_one(value, &scratch) {
+                    // This is 0
+                    scratch.insert(0, value.to_string());
+                    six_segments_found += 1;
+                } else {
+                    // This is 6
+                    scratch.insert(6, value.to_string());
+                    let one = scratch.get(&1).unwrap();
+                    let common = get_common_segments(value, one);
+                    segments.insert(Segment::LowerRight, common.get(0).unwrap().to_string());
+                    six_segments_found += 1;
                 }
             }
         }
@@ -213,21 +207,16 @@ fn get_descrambler(input: &[String]) -> HashMap<String, String> {
     let mut five_segments_found = 0;
     while five_segments_found < 3 {
         for value in input {
-            match value.len() {
-                5 => {
-                    if fits_a_seven(value, &scratch) {
-                        scratch.insert(3, value.to_string());
-                        five_segments_found += 1;
-                    } else if has_lower_right_segment(value, &segments) {
-                        scratch.insert(5, value.to_string());
-                        five_segments_found += 1;
-                    } else {
-                        scratch.insert(2, value.to_string());
-                        five_segments_found += 1;
-                    }
-                }
-                _ => {
-                    // noop
+            if value.len() == 5 {
+                if fits_a_seven(value, &scratch) {
+                    scratch.insert(3, value.to_string());
+                    five_segments_found += 1;
+                } else if has_lower_right_segment(value, &segments) {
+                    scratch.insert(5, value.to_string());
+                    five_segments_found += 1;
+                } else {
+                    scratch.insert(2, value.to_string());
+                    five_segments_found += 1;
                 }
             }
         }
@@ -307,7 +296,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
             .map(|line| line.to_string())
             .collect();
 
-        let output = part_oner(&input);
+        let output = one_four_seven_and_eight_counter(&input);
         assert_eq!(output, Some(26));
     }
 
@@ -414,7 +403,7 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
                     .map(|line| line.to_string())
                     .collect();
 
-        let output = part_twoer(&input);
+        let output = scrambled_display_summer(&input);
         assert_eq!(output, Some(61229));
     }
 }

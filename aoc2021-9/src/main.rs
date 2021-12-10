@@ -29,8 +29,8 @@ fn get_neighbors(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> Vec<(
     // A given point can have as many as 4 or as few as 2 neighbors
     [
         (position.0, position.1 - 1),
-        (position.0 + 1, position.1),
         (position.0, position.1 + 1),
+        (position.0 + 1, position.1),
         (position.0 - 1, position.1),
     ]
     .iter()

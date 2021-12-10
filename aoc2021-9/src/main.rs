@@ -46,8 +46,6 @@ fn get_basin_neighbors(
     cavern: &HashMap<(i32, i32), i32>,
     basin: &HashMap<(i32, i32), i32>,
 ) -> Vec<(i32, i32)> {
-    let value = cavern.get(position).unwrap();
-
     let maybe_neighbors = get_neighbors(&position, &cavern);
     maybe_neighbors
         .into_iter()
@@ -90,17 +88,12 @@ fn flood_basin(
     cavern: &HashMap<(i32, i32), i32>,
 ) -> HashMap<(i32, i32), i32> {
     let mut basin: HashMap<(i32, i32), i32> = HashMap::new();
-    if let Some(value) = cavern.get(position) {
-        basin.insert(*position, *value);
-    }
-
     let mut neighbors = get_basin_neighbors(&position, &cavern, &basin);
     while &neighbors.len() > &0 {
         if let Some(neighbor) = neighbors.pop() {
             if let Some(value) = cavern.get(&neighbor) {
                 basin.insert(neighbor, *value);
                 let mut new_neighbors = get_basin_neighbors(&neighbor, &cavern, &basin);
-
                 neighbors.append(&mut new_neighbors);
             }
         }

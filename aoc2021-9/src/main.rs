@@ -25,20 +25,28 @@ fn build_cavern_floor_map(input: &[String]) -> HashMap<(i32, i32), i32> {
     output
 }
 
-fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
-    let height = map
-        .get(position)
-        .expect("Couldn't get this position, check the map");
+fn get_neighbors(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
     // A given point can have as many as 4 or as few as 2 neighbors
-    let maybe_neighbors = [
+    [
         (position.0, position.1 - 1),
         (position.0, position.1 + 1),
         (position.0 - 1, position.1),
         (position.0 + 1, position.1),
-    ];
+    ]
+    .iter()
+    .filter_map(|position| match map.get(position).is_some() {
+        true => Some(*position),
+        false => None,
+    })
+    .collect()
+}
 
+fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
+    let height = map
+        .get(position)
+        .expect("Couldn't get this position, check the map");
     // Get the heights the lowest neighbor
-    let lowest_heighbor: i32 = maybe_neighbors
+    let lowest_heighbor: i32 = get_neighbors(position, &map)
         .iter()
         .filter_map(|position| match map.get(position) {
             Some(value) => Some(*value),
@@ -57,6 +65,15 @@ fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
         .filter(|position| is_low_point(position, &map))
         .collect()
 }
+
+// fn find_basin_cells(
+//     position: &(i32, i32),
+//     map: &HashMap<(i32, i32), i32>,
+// ) -> HashMap<(i32, i32), i32> {
+//     let mut output: HashMap<(i32, i32), i32> = HashMap::new();
+
+//     output;
+// }
 
 fn calculate_low_point_risk(map: &HashMap<(i32, i32), i32>) -> i32 {
     find_low_points(&map)

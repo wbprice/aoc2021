@@ -52,7 +52,10 @@ fn get_basin_neighbors(
         .into_iter()
         .filter(|&position| {
             let neighbor_value = cavern.get(&position).unwrap();
-            basin.get(&position).is_none() && *neighbor_value == value + 1 && *neighbor_value < 9
+            let not_mapped = basin.get(&position).is_none();
+            let less_than_nine = *neighbor_value < 9;
+            let one_more_than_value = *neighbor_value == value + 1;
+            less_than_nine && not_mapped
         })
         .collect()
 }
@@ -87,6 +90,9 @@ fn flood_basin(
     cavern: &HashMap<(i32, i32), i32>,
 ) -> HashMap<(i32, i32), i32> {
     let mut basin: HashMap<(i32, i32), i32> = HashMap::new();
+    if let Some(value) = cavern.get(position) {
+        basin.insert(*position, *value);
+    }
 
     let mut neighbors = get_basin_neighbors(&position, &cavern, &basin);
     while &neighbors.len() > &0 {
@@ -192,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn it_floods_a_basin() {
+    fn it_floods_basin_one() {
         let input: Vec<String> = r#"2199943210
 3987894921
 9856789892
@@ -206,24 +212,59 @@ mod tests {
         let cavern = build_cavern_floor_map(&input);
         let basin = flood_basin(&(1, 0), &cavern);
         assert_eq!(basin.into_keys().len(), 3);
+    }
 
+    #[test]
+    fn it_floods_basin_two() {
+        let input: Vec<String> = r#"2199943210
+3987894921
+9856789892
+8767896789
+9899965679"#
+            .to_string()
+            .lines()
+            .map(|line| line.to_string())
+            .collect();
+
+        let cavern = build_cavern_floor_map(&input);
         let basin = flood_basin(&(9, 0), &cavern);
         assert_eq!(basin.into_keys().len(), 9);
+    }
 
+    #[test]
+    fn it_floods_basin_three() {
+        let input: Vec<String> = r#"2199943210
+3987894921
+9856789892
+8767896789
+9899965679"#
+            .to_string()
+            .lines()
+            .map(|line| line.to_string())
+            .collect();
+
+        let cavern = build_cavern_floor_map(&input);
         let basin = flood_basin(&(2, 2), &cavern);
         assert_eq!(basin.into_keys().len(), 14);
+    }
 
+    #[test]
+    fn it_floods_basin_four() {
+        let input: Vec<String> = r#"2199943210
+3987894921
+9856789892
+8767896789
+9899965679"#
+            .to_string()
+            .lines()
+            .map(|line| line.to_string())
+            .collect();
+
+        let cavern = build_cavern_floor_map(&input);
         let basin = flood_basin(&(6, 4), &cavern);
-        assert_eq!(basin.into_keys().len(), 9);
-        /*
-        [0]:((7, 3), 7)
-        [1]:((7, 2), 8)
-        [2]:((7, 4), 6)
-        [3]:((6, 3), 6)
-        [4]:((8, 3), 8)
-        [5]:((5, 4), 6)
-        [6]:((8, 4), 7)
-        [7]:((6, 4), 5)
-        */
+        let mut values: Vec<i32> = basin.into_values().collect();
+        values.sort_unstable();
+        dbg!(values);
+        // assert_eq!(&basin.into_keys().len(), 9);
     }
 }

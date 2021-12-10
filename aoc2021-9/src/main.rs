@@ -113,13 +113,16 @@ fn calculate_low_point_risk(map: &HashMap<(i32, i32), i32>) -> i32 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_reads_the_input_into_a_map() {
-        let input: Vec<String> = r#"2199943210
+    const INPUT: &str = r#"2199943210
 3987894921
 9856789892
 8767896789
-9899965678"#
+9899965678
+"#;
+
+    #[test]
+    fn it_reads_the_input_into_a_map() {
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -134,11 +137,7 @@ mod tests {
 
     #[test]
     fn it_tests_to_see_if_a_point_is_a_low_point() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -151,11 +150,7 @@ mod tests {
 
     #[test]
     fn it_finds_low_points_in_the_cavern_map() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -176,11 +171,7 @@ mod tests {
 
     #[test]
     fn it_calculates_risk_for_low_points() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -193,11 +184,7 @@ mod tests {
 
     #[test]
     fn it_floods_basin_one() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -210,11 +197,7 @@ mod tests {
 
     #[test]
     fn it_floods_basin_two() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -227,11 +210,7 @@ mod tests {
 
     #[test]
     fn it_floods_basin_three() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -244,11 +223,7 @@ mod tests {
 
     #[test]
     fn it_floods_basin_four() {
-        let input: Vec<String> = r#"2199943210
-3987894921
-9856789892
-8767896789
-9899965678"#
+        let input: Vec<String> = INPUT
             .to_string()
             .lines()
             .map(|line| line.to_string())

@@ -41,6 +41,21 @@ fn get_neighbors(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> Vec<(
     .collect()
 }
 
+fn get_basin_neighbors(
+    position: &(i32, i32),
+    cavern: &HashMap<(i32, i32), i32>,
+    basin: &HashMap<(i32, i32), i32>,
+) -> Vec<(i32, i32)> {
+    let maybe_neighbors = get_neighbors(&position, &cavern);
+    maybe_neighbors
+        .into_iter()
+        .filter(|&position| {
+            let value = cavern.get(&position).unwrap();
+            *value < 9 && basin.get(&position).is_none()
+        })
+        .collect()
+}
+
 fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
     let height = map
         .get(position)
@@ -66,14 +81,24 @@ fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
         .collect()
 }
 
-// fn find_basin_cells(
-//     position: &(i32, i32),
-//     map: &HashMap<(i32, i32), i32>,
-// ) -> HashMap<(i32, i32), i32> {
-//     let mut output: HashMap<(i32, i32), i32> = HashMap::new();
+fn flood_basin(
+    position: &(i32, i32),
+    cavern: &HashMap<(i32, i32), i32>,
+) -> HashMap<(i32, i32), i32> {
+    let mut basin: HashMap<(i32, i32), i32> = HashMap::new();
 
-//     output;
-// }
+    let mut neighbors = get_basin_neighbors(&position, &cavern, &basin);
+    while &neighbors.len() > &0 {
+        if let Some(neighbor) = neighbors.pop() {
+            if let Some(value) = cavern.get(&neighbor) {
+                basin.insert(neighbor, *value);
+            }
+            neighbors.append(&mut get_basin_neighbors(&neighbor, &cavern, &basin));
+        }
+    }
+
+    basin
+}
 
 fn calculate_low_point_risk(map: &HashMap<(i32, i32), i32>) -> i32 {
     find_low_points(&map)
@@ -162,5 +187,31 @@ mod tests {
         let cavern_floor = build_cavern_floor_map(&input);
         let risk = calculate_low_point_risk(&cavern_floor);
         assert_eq!(risk, 15);
+    }
+
+    #[test]
+    fn it_floods_a_basin() {
+        let input: Vec<String> = r#"2199943210
+3987894921
+9856789892
+8767896789
+9899965679"#
+            .to_string()
+            .lines()
+            .map(|line| line.to_string())
+            .collect();
+
+        let cavern = build_cavern_floor_map(&input);
+        let basin = flood_basin(&(1, 0), &cavern);
+        assert_eq!(basin.into_keys().len(), 3);
+
+        let basin = flood_basin(&(9, 0), &cavern);
+        assert_eq!(basin.into_keys().len(), 9);
+
+        let basin = flood_basin(&(2, 2), &cavern);
+        assert_eq!(basin.into_keys().len(), 14);
+
+        let basin = flood_basin(&(6, 4), &cavern);
+        assert_eq!(basin.into_keys().len(), 9);
     }
 }

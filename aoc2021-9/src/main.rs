@@ -29,9 +29,9 @@ fn get_neighbors(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> Vec<(
     // A given point can have as many as 4 or as few as 2 neighbors
     [
         (position.0, position.1 - 1),
+        (position.0 + 1, position.1),
         (position.0, position.1 + 1),
         (position.0 - 1, position.1),
-        (position.0 + 1, position.1),
     ]
     .iter()
     .filter_map(|position| match map.get(position).is_some() {
@@ -47,6 +47,7 @@ fn get_basin_neighbors(
     basin: &HashMap<(i32, i32), i32>,
 ) -> Vec<(i32, i32)> {
     let value = cavern.get(position).unwrap();
+
     let maybe_neighbors = get_neighbors(&position, &cavern);
     maybe_neighbors
         .into_iter()
@@ -54,7 +55,6 @@ fn get_basin_neighbors(
             let neighbor_value = cavern.get(&position).unwrap();
             let not_mapped = basin.get(&position).is_none();
             let less_than_nine = *neighbor_value < 9;
-            let one_more_than_value = *neighbor_value == value + 1;
             less_than_nine && not_mapped
         })
         .collect()
@@ -100,6 +100,7 @@ fn flood_basin(
             if let Some(value) = cavern.get(&neighbor) {
                 basin.insert(neighbor, *value);
                 let mut new_neighbors = get_basin_neighbors(&neighbor, &cavern, &basin);
+
                 neighbors.append(&mut new_neighbors);
             }
         }
@@ -125,7 +126,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -135,7 +136,7 @@ mod tests {
         assert_eq!(cavern_floor[&(0, 0)], 2);
         assert_eq!(cavern_floor[&(9, 0)], 0);
         assert_eq!(cavern_floor[&(0, 4)], 9);
-        assert_eq!(cavern_floor[&(9, 4)], 9);
+        assert_eq!(cavern_floor[&(9, 4)], 8);
     }
 
     #[test]
@@ -144,7 +145,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -161,7 +162,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -186,7 +187,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -203,7 +204,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -220,7 +221,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -237,7 +238,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -254,7 +255,7 @@ mod tests {
 3987894921
 9856789892
 8767896789
-9899965679"#
+9899965678"#
             .to_string()
             .lines()
             .map(|line| line.to_string())
@@ -262,9 +263,6 @@ mod tests {
 
         let cavern = build_cavern_floor_map(&input);
         let basin = flood_basin(&(6, 4), &cavern);
-        let mut values: Vec<i32> = basin.into_values().collect();
-        values.sort_unstable();
-        dbg!(values);
-        // assert_eq!(&basin.into_keys().len(), 9);
+        assert_eq!(basin.into_keys().len(), 9);
     }
 }

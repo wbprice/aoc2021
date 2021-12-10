@@ -11,6 +11,12 @@ fn main() {
     let cavern_map = build_cavern_floor_map(&input);
     let risk = calculate_low_point_risk(&cavern_map);
     dbg!(risk);
+
+    let mut basins = measure_basins(&cavern_map);
+    basins.sort_unstable();
+    basins.reverse();
+    let biggest_basins_product = &basins[0..3].iter().product::<i32>();
+    dbg!(biggest_basins_product);
 }
 
 fn build_cavern_floor_map(input: &[String]) -> HashMap<(i32, i32), i32> {
@@ -23,6 +29,22 @@ fn build_cavern_floor_map(input: &[String]) -> HashMap<(i32, i32), i32> {
     }
 
     output
+}
+
+fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
+    map.clone()
+        .into_keys()
+        .filter(|position| is_low_point(position, map))
+        .collect()
+}
+
+fn measure_basins(map: &HashMap<(i32, i32), i32>) -> Vec<i32> {
+    map.clone()
+        .into_keys()
+        .filter(|position| is_low_point(position, map))
+        .map(|low_point| flood_basin(&low_point, map))
+        .map(|basin| basin.into_keys().len() as i32)
+        .collect()
 }
 
 fn get_neighbors(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
@@ -46,7 +68,7 @@ fn get_basin_neighbors(
     cavern: &HashMap<(i32, i32), i32>,
     basin: &HashMap<(i32, i32), i32>,
 ) -> Vec<(i32, i32)> {
-    let maybe_neighbors = get_neighbors(&position, &cavern);
+    let maybe_neighbors = get_neighbors(position, cavern);
     maybe_neighbors
         .into_iter()
         .filter(|&position| {
@@ -63,12 +85,9 @@ fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
         .get(position)
         .expect("Couldn't get this position, check the map");
     // Get the heights the lowest neighbor
-    let lowest_heighbor: i32 = get_neighbors(position, &map)
+    let lowest_heighbor: i32 = get_neighbors(position, map)
         .iter()
-        .filter_map(|position| match map.get(position) {
-            Some(value) => Some(*value),
-            None => None,
-        })
+        .filter_map(|position| map.get(position).copied())
         .min()
         .expect("Couldn't find lowest neighbor");
 
@@ -76,24 +95,17 @@ fn is_low_point(position: &(i32, i32), map: &HashMap<(i32, i32), i32>) -> bool {
     height < &lowest_heighbor
 }
 
-fn find_low_points(map: &HashMap<(i32, i32), i32>) -> Vec<(i32, i32)> {
-    map.clone()
-        .into_keys()
-        .filter(|position| is_low_point(position, &map))
-        .collect()
-}
-
 fn flood_basin(
     position: &(i32, i32),
     cavern: &HashMap<(i32, i32), i32>,
 ) -> HashMap<(i32, i32), i32> {
     let mut basin: HashMap<(i32, i32), i32> = HashMap::new();
-    let mut neighbors = get_basin_neighbors(&position, &cavern, &basin);
-    while &neighbors.len() > &0 {
+    let mut neighbors = get_basin_neighbors(position, cavern, &basin);
+    while !neighbors.is_empty() {
         if let Some(neighbor) = neighbors.pop() {
             if let Some(value) = cavern.get(&neighbor) {
                 basin.insert(neighbor, *value);
-                let mut new_neighbors = get_basin_neighbors(&neighbor, &cavern, &basin);
+                let mut new_neighbors = get_basin_neighbors(&neighbor, cavern, &basin);
                 neighbors.append(&mut new_neighbors);
             }
         }
@@ -103,7 +115,7 @@ fn flood_basin(
 }
 
 fn calculate_low_point_risk(map: &HashMap<(i32, i32), i32>) -> i32 {
-    find_low_points(&map)
+    find_low_points(map)
         .iter()
         .map(|position| map.get(position).expect("Couldn't find value of position") + 1)
         .sum::<i32>()
@@ -232,5 +244,22 @@ mod tests {
         let cavern = build_cavern_floor_map(&input);
         let basin = flood_basin(&(6, 4), &cavern);
         assert_eq!(basin.into_keys().len(), 9);
+    }
+
+    #[test]
+    fn it_measures_basins() {
+        let input: Vec<String> = INPUT
+            .to_string()
+            .lines()
+            .map(|line| line.to_string())
+            .collect();
+
+        let cavern = build_cavern_floor_map(&input);
+        let basins = measure_basins(&cavern);
+        assert_eq!(basins.len(), 4);
+        assert!(basins.contains(&3));
+        assert!(basins.contains(&9));
+        assert!(basins.contains(&14));
+        assert!(basins.contains(&9));
     }
 }

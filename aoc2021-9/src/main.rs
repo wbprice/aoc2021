@@ -46,12 +46,13 @@ fn get_basin_neighbors(
     cavern: &HashMap<(i32, i32), i32>,
     basin: &HashMap<(i32, i32), i32>,
 ) -> Vec<(i32, i32)> {
+    let value = cavern.get(position).unwrap();
     let maybe_neighbors = get_neighbors(&position, &cavern);
     maybe_neighbors
         .into_iter()
         .filter(|&position| {
-            let value = cavern.get(&position).unwrap();
-            *value < 9 && basin.get(&position).is_none()
+            let neighbor_value = cavern.get(&position).unwrap();
+            basin.get(&position).is_none() && *neighbor_value == value + 1 && *neighbor_value < 9
         })
         .collect()
 }
@@ -92,8 +93,9 @@ fn flood_basin(
         if let Some(neighbor) = neighbors.pop() {
             if let Some(value) = cavern.get(&neighbor) {
                 basin.insert(neighbor, *value);
+                let mut new_neighbors = get_basin_neighbors(&neighbor, &cavern, &basin);
+                neighbors.append(&mut new_neighbors);
             }
-            neighbors.append(&mut get_basin_neighbors(&neighbor, &cavern, &basin));
         }
     }
 
@@ -213,5 +215,15 @@ mod tests {
 
         let basin = flood_basin(&(6, 4), &cavern);
         assert_eq!(basin.into_keys().len(), 9);
+        /*
+        [0]:((7, 3), 7)
+        [1]:((7, 2), 8)
+        [2]:((7, 4), 6)
+        [3]:((6, 3), 6)
+        [4]:((8, 3), 8)
+        [5]:((5, 4), 6)
+        [6]:((8, 4), 7)
+        [7]:((6, 4), 5)
+        */
     }
 }

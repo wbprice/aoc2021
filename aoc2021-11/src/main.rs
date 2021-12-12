@@ -21,9 +21,9 @@ fn model_octopod_flashes(input: &[String], steps: u32) -> (HashMap<(i8, i8), i8>
 
     for _step in 0..steps {
         octogrid = increment_octopus_energy_level(&octogrid);
-        let output = handle_charged_octopods(&octogrid);
-        octogrid = output.0;
-        flashes += output.1;
+        let (new_octogrid, new_flashes) = handle_charged_octopods(&octogrid);
+        octogrid = new_octogrid;
+        flashes += new_flashes;
     }
 
     (octogrid, flashes)
@@ -33,8 +33,8 @@ fn model_octopod_sync_flash(input: &[String], steps: u32) -> Option<(HashMap<(i8
     let mut octogrid = build_octopus_grid(input);
     for step in 0..steps {
         octogrid = increment_octopus_energy_level(&octogrid);
-        let output = handle_charged_octopods(&octogrid);
-        octogrid = output.0;
+        let (new_octogrid, _flashes) = handle_charged_octopods(&octogrid);
+        octogrid = new_octogrid;
         if check_octopod_flash_synchronization(&octogrid) {
             return Some((octogrid, step));
         }

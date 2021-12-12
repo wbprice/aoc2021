@@ -30,7 +30,7 @@ fn model_octopod_flashes(input: &[String], steps: u32) -> (HashMap<(i8, i8), i8>
 }
 
 fn model_octopod_sync_flash(input: &[String], steps: u32) -> Option<(HashMap<(i8, i8), i8>, u32)> {
-    let mut octogrid = build_octopus_grid(&input);
+    let mut octogrid = build_octopus_grid(input);
     for step in 0..steps {
         octogrid = increment_octopus_energy_level(&octogrid);
         let output = handle_charged_octopods(&octogrid);
@@ -79,10 +79,7 @@ fn get_octopus_neighbors(position: (i8, i8), octogrid: &HashMap<(i8, i8), i8>) -
         (position.0 - 1, position.1 - 1), // top left
     ]
     .iter()
-    .filter_map(|neighbor| match octogrid.get(neighbor) {
-        Some(_) => Some(*neighbor),
-        None => None,
-    })
+    .filter_map(|neighbor| octogrid.get(neighbor).map(|_| *neighbor))
     .collect()
 }
 
@@ -101,7 +98,7 @@ fn handle_charged_octopods(octogrid: &HashMap<(i8, i8), i8>) -> (HashMap<(i8, i8
     let mut handle_flash: Vec<(i8, i8)> = output
         .clone()
         .into_keys()
-        .filter(|position| match output.get(&position) {
+        .filter(|position| match output.get(position) {
             Some(charge) => charge > &9,
             None => false,
         })
@@ -146,8 +143,8 @@ fn handle_charged_octopods(octogrid: &HashMap<(i8, i8), i8>) -> (HashMap<(i8, i8
 }
 
 fn check_octopod_flash_synchronization(octogrid: &HashMap<(i8, i8), i8>) -> bool {
-    for charge in octogrid.clone().values() {
-        if charge > &1 {
+    for &charge in octogrid.clone().values() {
+        if charge > 1 {
             return false;
         }
     }
@@ -257,8 +254,7 @@ mod tests {
     fn it_predicts_when_all_the_octopods_will_flash_together() {
         let input: Vec<String> = INPUT.lines().map(|line| line.to_string()).collect();
 
-        let (octogrid, step) = model_octopod_sync_flash(&input, 200).unwrap();
-        dbg!(debug_octogrid(&octogrid, 10, 10));
+        let (_octogrid, step) = model_octopod_sync_flash(&input, 200).unwrap();
         assert_eq!(step, 194);
     }
 }

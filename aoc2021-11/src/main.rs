@@ -140,7 +140,7 @@ fn handle_charged_octopods(octogrid: &HashMap<(i8, i8), i8>) -> (HashMap<(i8, i8
 
 fn check_octopod_flash_synchronization(octogrid: &HashMap<(i8, i8), i8>) -> bool {
     for &charge in octogrid.clone().values() {
-        if charge > 1 {
+        if charge > 0 {
             return false;
         }
     }

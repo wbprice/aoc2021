@@ -113,12 +113,8 @@ fn handle_charged_octopods(octogrid: &HashMap<(i8, i8), i8>) -> (HashMap<(i8, i8
                 flashed.push(position);
             }
 
-            // Look up any neighbors, excluding those who have already flashed
-            let neighbors: Vec<(i8, i8)> = get_octopus_neighbors(position, &output)
-                .into_iter()
-                .collect();
-
-            for neighbor in neighbors {
+            // Look up any neighbors
+            for neighbor in get_octopus_neighbors(position, &output) {
                 if let Some(charge) = output.get(&neighbor) {
                     // Otherwise, increment it's energy level by one.
                     let new_charge = charge + 1;

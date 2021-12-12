@@ -116,10 +116,10 @@ fn handle_charged_octopods(octogrid: &HashMap<(i8, i8), i8>) -> (HashMap<(i8, i8
             // Look up any neighbors
             for neighbor in get_octopus_neighbors(position, &output) {
                 if let Some(charge) = output.get(&neighbor) {
-                    // Otherwise, increment it's energy level by one.
+                    // Increment it's energy level by one.
                     let new_charge = charge + 1;
                     output.insert(neighbor, new_charge);
-                    // If this octopodd's charge level is above 9 add it to the list to check
+                    // If this octopod's charge level is above 9 add it to the list to check
                     if new_charge > 9 {
                         handle_flash.push(neighbor);
                     }

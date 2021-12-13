@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
 
 type CaveGraph = HashMap<String, Vec<String>>;
@@ -13,10 +13,10 @@ fn main() {
         .collect();
 
     let cave_graph = build_cave_graph(&input);
-    let paths = walkabout_cave_graph_v2(&cave_graph, false);
+    let paths = walkabout_cave_graph(&cave_graph, false);
     dbg!(paths.len());
 
-    let paths = walkabout_cave_graph_v2(&cave_graph, true);
+    let paths = walkabout_cave_graph(&cave_graph, true);
     dbg!(paths.len());
 }
 
@@ -33,7 +33,7 @@ fn build_cave_graph(input: &[String]) -> CaveGraph {
     let mut graph: CaveGraph = HashMap::new();
 
     // Define each node in the graph
-    for edge in parse_edges(&input) {
+    for edge in parse_edges(input) {
         let left = edge.get(0).unwrap().to_string();
         let right = edge.get(1).unwrap().to_string();
 
@@ -42,7 +42,7 @@ fn build_cave_graph(input: &[String]) -> CaveGraph {
     }
 
     // Populate each node's outgoing edges
-    for edge in parse_edges(&input) {
+    for edge in parse_edges(input) {
         let left = edge.get(0).unwrap().to_string();
         let right = edge.get(1).unwrap().to_string();
 
@@ -58,8 +58,8 @@ fn build_cave_graph(input: &[String]) -> CaveGraph {
     graph
 }
 
-fn should_goto_cave(cave: String, breadcrumbs: &[String], scenic_route: bool) -> bool {
-    if *cave == *cave.to_lowercase() && &cave != "end" {
+fn should_goto_cave(node: &str, breadcrumbs: &[String], scenic_route: bool) -> bool {
+    if node == node.to_lowercase() && node != "end" {
         if scenic_route {
             // LOL
             let mut small_cave_visits: HashMap<String, u8> = HashMap::new();
@@ -76,17 +76,16 @@ fn should_goto_cave(cave: String, breadcrumbs: &[String], scenic_route: bool) ->
             }
 
             // Has this cave been visited before?
-            if small_cave_visits.get(&cave).is_some() {
+            if small_cave_visits.get(node).is_some() {
                 // This is fine as long as another cave hasn't been visited twice already
-                return small_cave_visits
+                return !small_cave_visits
                     .clone()
                     .into_values()
-                    .find(|&visits| visits > 1)
-                    .is_none();
+                    .any(|visits| visits > 1);
             }
             return true;
         } else {
-            return !breadcrumbs.contains(&cave);
+            return !breadcrumbs.contains(&node.to_string());
         }
     }
 
@@ -97,11 +96,12 @@ fn walk_cave_graph(
     node: &str,
     cave_graph: &CaveGraph,
     breadcrumbs: Vec<String>,
-    output: &mut HashSet<Path>,
+    output: &mut Vec<Path>,
     scenic_route: bool,
 ) {
+    // We have successfully reached the end
     if node == "end" {
-        output.insert(breadcrumbs.clone().join(","));
+        output.push(breadcrumbs.clone().join(","));
         return;
     }
 
@@ -109,10 +109,11 @@ fn walk_cave_graph(
         let valid_edges: Vec<&String> = edges
             .iter()
             .filter(|&edge| edge != "start")
-            .filter(|&edge| should_goto_cave(edge.to_string(), &breadcrumbs, scenic_route))
+            .filter(|&edge| should_goto_cave(edge.as_str(), &breadcrumbs, scenic_route))
             .collect();
 
-        // If there are no valid edges, quit
+        // If there are no valid edges now, this isn't a valid path
+        // and we should quit now
         if valid_edges.is_empty() {
             return;
         }
@@ -125,8 +126,8 @@ fn walk_cave_graph(
     }
 }
 
-fn walkabout_cave_graph_v2(cave_graph: &CaveGraph, scenic_route: bool) -> HashSet<Path> {
-    let mut output: HashSet<Path> = HashSet::new();
+fn walkabout_cave_graph(cave_graph: &CaveGraph, scenic_route: bool) -> Vec<Path> {
+    let mut output: Vec<Path> = vec![];
 
     walk_cave_graph(
         &"start".to_string(),
@@ -197,7 +198,7 @@ start-RW"#;
     fn it_creates_a_path_to_walk_the_graph() {
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let mut output: HashSet<Path> = HashSet::new();
+        let mut output: Vec<Path> = vec![];
         walk_cave_graph(
             &"start".to_string(),
             &cave_graph,
@@ -213,7 +214,7 @@ start-RW"#;
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
 
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph_v2(&cave_graph, false);
+        let output = walkabout_cave_graph(&cave_graph, false);
         assert_eq!(output.len(), 10);
     }
 
@@ -221,7 +222,7 @@ start-RW"#;
     fn it_finds_valid_paths_in_input_1() {
         let input: Vec<String> = INPUT_1.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph_v2(&cave_graph, false);
+        let output = walkabout_cave_graph(&cave_graph, false);
         assert_eq!(output.len(), 19);
     }
 
@@ -229,7 +230,7 @@ start-RW"#;
     fn it_finds_valid_paths_in_input_2() {
         let input: Vec<String> = INPUT_2.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph_v2(&cave_graph, false);
+        let output = walkabout_cave_graph(&cave_graph, false);
         assert_eq!(output.len(), 226);
     }
 
@@ -237,7 +238,7 @@ start-RW"#;
     fn it_takes_the_scenic_route_in_input_0() {
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph_v2(&cave_graph, true);
+        let output = walkabout_cave_graph(&cave_graph, true);
         assert_eq!(output.len(), 36);
     }
 
@@ -245,7 +246,7 @@ start-RW"#;
     fn it_takes_the_scenic_route_in_input_1() {
         let input: Vec<String> = INPUT_1.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph_v2(&cave_graph, true);
+        let output = walkabout_cave_graph(&cave_graph, true);
         assert_eq!(output.len(), 103);
     }
 
@@ -253,7 +254,7 @@ start-RW"#;
     fn it_takes_the_scenic_route_in_input_2() {
         let input: Vec<String> = INPUT_2.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph_v2(&cave_graph, true);
+        let output = walkabout_cave_graph(&cave_graph, true);
         assert_eq!(output.len(), 3509);
     }
 }

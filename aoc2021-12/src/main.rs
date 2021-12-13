@@ -61,27 +61,22 @@ fn build_cave_graph(input: &[String]) -> CaveGraph {
 fn should_goto_cave(node: &str, breadcrumbs: &[String], scenic_route: bool) -> bool {
     if node == node.to_lowercase() && node != "end" {
         if scenic_route {
-            // LOL
-            let mut small_cave_visits: HashMap<String, u8> = HashMap::new();
-            for crumb in breadcrumbs
+            let small_cave_visits: HashMap<String, u8> = breadcrumbs
                 .iter()
                 .filter(|&p| *p == *p.to_lowercase())
-                .collect::<Vec<&String>>()
-            {
-                if let Some(visit) = small_cave_visits.get_mut(crumb) {
-                    *visit += 1;
-                } else {
-                    small_cave_visits.insert(crumb.to_string(), 1);
-                }
-            }
+                .fold(HashMap::new(), |mut acc, crumb| {
+                    if let Some(visit) = acc.get_mut(crumb) {
+                        *visit += 1;
+                    } else {
+                        acc.insert(crumb.to_string(), 1);
+                    }
+                    acc
+                });
 
             // Has this cave been visited before?
             if small_cave_visits.get(node).is_some() {
                 // This is fine as long as another cave hasn't been visited twice already
-                return !small_cave_visits
-                    .clone()
-                    .into_values()
-                    .any(|visits| visits > 1);
+                return !small_cave_visits.into_values().any(|visits| visits > 1);
             }
             return true;
         } else {

@@ -90,7 +90,7 @@ fn walk_cave_graph(cave_graph: &CaveGraph) -> Path {
                     break;
                 }
 
-                // Pick the next destination randomly what's available
+                // Pick the next destination randomly from what's available
                 let pick = rng.gen_range(0..valid_destinations.len());
                 let next = valid_destinations[pick];
                 output.push(next.to_string());

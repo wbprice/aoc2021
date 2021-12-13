@@ -14,10 +14,10 @@ fn main() {
         .collect();
 
     let cave_graph = build_cave_graph(&input);
-    // let paths = walkabout_cave_graph(&cave_graph, 10_000_000, false);
-    // dbg!(paths.len());
+    let paths = walkabout_cave_graph_v2(&cave_graph, false);
+    dbg!(paths.len());
 
-    let paths = walkabout_cave_graph(&cave_graph, 100_000_000, true);
+    let paths = walkabout_cave_graph_v2(&cave_graph, true);
     dbg!(paths.len());
 }
 
@@ -98,60 +98,50 @@ fn should_goto_cave(cave: String, path: &[String], scenic_route: bool) -> bool {
     false
 }
 
-fn walk_cave_graph(cave_graph: &CaveGraph, scenic_route: bool) -> Path {
-    // Leave a trail of breadcrumbs
-    let mut output: Vec<String> = vec!["start".to_string()];
-    let mut rng = thread_rng();
+fn walk_cave_graph(
+    node: &String,
+    cave_graph: &CaveGraph,
+    breadcrumbs: Vec<String>,
+    output: &mut HashSet<Path>,
+    scenic_route: bool,
+) {
+    if *node == "end".to_string() {
+        output.insert(breadcrumbs.clone().join(","));
+        return;
+    }
 
-    loop {
-        // get the next possible steps
-        if let Some(here) = output.last() {
-            // "end" can't be left
-            if here == "end" {
-                break;
-            }
+    if let Some(edges) = cave_graph.get(node) {
+        let valid_edges: Vec<&String> = edges
+            .iter()
+            .filter(|&edge| *edge != "start".to_string())
+            .filter(|&edge| should_goto_cave(edge.to_string(), &breadcrumbs, scenic_route))
+            .collect();
 
-            if let Some(destinations) = cave_graph.get(here) {
-                // Where to next?
-                let valid_destinations: Vec<&String> = destinations
-                    .iter()
-                    .filter(|&destination| destination != "start")
-                    .filter(|&destination| {
-                        should_goto_cave(destination.to_string(), &output, scenic_route)
-                    })
-                    .collect();
+        // If there are no valid edges, quit
+        if valid_edges.is_empty() {
+            return;
+        }
 
-                // If there are no valid destinations
-                if valid_destinations.is_empty() {
-                    break;
-                }
-
-                // Pick the next destination randomly from what's available
-                let pick = rng.gen_range(0..valid_destinations.len());
-
-                let next = valid_destinations.get(pick).unwrap();
-                output.push(next.to_string());
-            }
+        for edge in valid_edges {
+            let mut next_breadcrumbs = breadcrumbs.clone();
+            next_breadcrumbs.push(edge.to_string());
+            walk_cave_graph(edge, cave_graph, next_breadcrumbs, output, scenic_route);
         }
     }
-
-    // Join the breadcrumbs into a string
-    output.join(",")
 }
 
-fn walkabout_cave_graph(cave_graph: &CaveGraph, attempts: u32, scenic_route: bool) -> Vec<Path> {
+fn walkabout_cave_graph_v2(cave_graph: &CaveGraph, scenic_route: bool) -> HashSet<Path> {
     let mut output: HashSet<Path> = HashSet::new();
 
-    for attempt in 0..attempts {
-        dbg!(attempt);
-        output.insert(walk_cave_graph(cave_graph, scenic_route));
-    }
+    walk_cave_graph(
+        &"start".to_string(),
+        cave_graph,
+        vec![],
+        &mut output,
+        scenic_route,
+    );
 
-    // Remove paths that don't end at "end"
     output
-        .into_iter()
-        .filter(|path| path.ends_with("end"))
-        .collect()
 }
 
 #[cfg(test)]
@@ -212,7 +202,8 @@ start-RW"#;
     fn it_creates_a_path_to_walk_the_graph() {
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        walk_cave_graph(&cave_graph, false);
+        let mut output: HashSet<Path> = HashSet::new();
+        walk_cave_graph(&"start".to_string(), &cave_graph, vec![], &mut output, false);
         assert!(true);
     }
 
@@ -221,7 +212,7 @@ start-RW"#;
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
 
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph(&cave_graph, 1000, false);
+        let output = walkabout_cave_graph_v2(&cave_graph, false);
         assert_eq!(output.len(), 10);
     }
 
@@ -229,7 +220,7 @@ start-RW"#;
     fn it_finds_valid_paths_in_input_1() {
         let input: Vec<String> = INPUT_1.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph(&cave_graph, 1000, false);
+        let output = walkabout_cave_graph_v2(&cave_graph, false);
         assert_eq!(output.len(), 19);
     }
 
@@ -237,7 +228,7 @@ start-RW"#;
     fn it_finds_valid_paths_in_input_2() {
         let input: Vec<String> = INPUT_2.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph(&cave_graph, 100_000, false);
+        let output = walkabout_cave_graph_v2(&cave_graph, false);
         assert_eq!(output.len(), 226);
     }
 
@@ -245,7 +236,7 @@ start-RW"#;
     fn it_takes_the_scenic_route_in_input_0() {
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph(&cave_graph, 10_000, true);
+        let output = walkabout_cave_graph_v2(&cave_graph, true);
         assert_eq!(output.len(), 36);
     }
 
@@ -253,7 +244,7 @@ start-RW"#;
     fn it_takes_the_scenic_route_in_input_1() {
         let input: Vec<String> = INPUT_1.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph(&cave_graph, 10_000, true);
+        let output = walkabout_cave_graph_v2(&cave_graph, true);
         assert_eq!(output.len(), 103);
     }
 
@@ -261,7 +252,7 @@ start-RW"#;
     fn it_takes_the_scenic_route_in_input_2() {
         let input: Vec<String> = INPUT_2.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
-        let output = walkabout_cave_graph(&cave_graph, 500_000, true);
+        let output = walkabout_cave_graph_v2(&cave_graph, true);
         assert_eq!(output.len(), 3509);
     }
 }

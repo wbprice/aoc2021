@@ -1,4 +1,3 @@
-use rand::{thread_rng, Rng};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 
@@ -59,53 +58,49 @@ fn build_cave_graph(input: &[String]) -> CaveGraph {
     graph
 }
 
-fn should_goto_cave(cave: String, path: &[String], scenic_route: bool) -> bool {
+fn should_goto_cave(cave: String, breadcrumbs: &[String], scenic_route: bool) -> bool {
     if *cave == *cave.to_lowercase() && &cave != "end" {
         if scenic_route {
             // LOL
             let mut small_cave_visits: HashMap<String, u8> = HashMap::new();
-            for p in path
+            for crumb in breadcrumbs
                 .iter()
                 .filter(|&p| *p == *p.to_lowercase())
                 .collect::<Vec<&String>>()
             {
-                if let Some(visit) = small_cave_visits.get_mut(p) {
+                if let Some(visit) = small_cave_visits.get_mut(crumb) {
                     *visit += 1;
                 } else {
-                    small_cave_visits.insert(p.to_string(), 1);
+                    small_cave_visits.insert(crumb.to_string(), 1);
                 }
             }
 
             // Has this cave been visited before?
-            if let Some(this_cave_visits) = small_cave_visits.get(&cave) {
+            if small_cave_visits.get(&cave).is_some() {
                 // This is fine as long as another cave hasn't been visited twice already
-                let caves_visited_twice: Vec<u8> = small_cave_visits
+                return small_cave_visits
                     .clone()
                     .into_values()
-                    .filter(|&visits| visits > 1)
-                    .collect();
-
-                return caves_visited_twice.len() < 1;
+                    .find(|&visits| visits > 1)
+                    .is_none();
             }
             return true;
         } else {
-            return !path.contains(&cave);
+            return !breadcrumbs.contains(&cave);
         }
-    } else if cave != "start" {
-        return true;
     }
 
-    false
+    true
 }
 
 fn walk_cave_graph(
-    node: &String,
+    node: &str,
     cave_graph: &CaveGraph,
     breadcrumbs: Vec<String>,
     output: &mut HashSet<Path>,
     scenic_route: bool,
 ) {
-    if *node == "end".to_string() {
+    if node == "end" {
         output.insert(breadcrumbs.clone().join(","));
         return;
     }
@@ -113,7 +108,7 @@ fn walk_cave_graph(
     if let Some(edges) = cave_graph.get(node) {
         let valid_edges: Vec<&String> = edges
             .iter()
-            .filter(|&edge| *edge != "start".to_string())
+            .filter(|&edge| edge != "start")
             .filter(|&edge| should_goto_cave(edge.to_string(), &breadcrumbs, scenic_route))
             .collect();
 
@@ -203,7 +198,13 @@ start-RW"#;
         let input: Vec<String> = INPUT_0.lines().map(|line| line.to_string()).collect();
         let cave_graph = build_cave_graph(&input);
         let mut output: HashSet<Path> = HashSet::new();
-        walk_cave_graph(&"start".to_string(), &cave_graph, vec![], &mut output, false);
+        walk_cave_graph(
+            &"start".to_string(),
+            &cave_graph,
+            vec![],
+            &mut output,
+            false,
+        );
         assert!(true);
     }
 

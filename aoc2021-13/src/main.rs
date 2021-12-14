@@ -68,30 +68,8 @@ impl Paper {
             }
         }
 
-        /*
-        for cell_y in 0..y + 1 {
--                for cell_x in 0..x + 1 {
--                    // For rows above the fold
--                    // x is always the same
--                    if paper.get(&(cell_x, cell_y)).is_some() {
--                        if cell_y < fold_at {
--                            output.insert((cell_x, cell_y), '#');
--                        } else {
--                            // When flipped
--                            output.insert((cell_x, y - cell_y), '#');
--                        }
--                    }
--                }
--            }
--            output
-
-        */
-        /*
-
-        */
-
         Paper {
-            columns: self.columns - 1 / 2,
+            columns: self.columns / 2,
             rows: self.rows,
             content,
         }
@@ -113,29 +91,9 @@ impl Paper {
             }
         }
         
-        /*
-                let mut output = Paper::new();
--            for cell_y in 0..y + 1 {
--                for cell_x in 0..x + 1 {
--                    // For columns left of the fold
--                    // y is always the same
--                    if paper.get(&(cell_x, cell_y)).is_some() {
--                        if cell_x < fold_at {
--                            output.insert((cell_x, cell_y), '#');
--                        } else {
--                            output.insert((x - cell_x, cell_y), '#');
--                        }
--                    }
--                }
--            }
--            output
-
-        */
-
-
         Paper {
             columns: self.columns,
-            rows: self.rows - 1 / 2,
+            rows: self.rows / 2,
             content,
         }
     }
@@ -227,9 +185,7 @@ fold along x=5"#;
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
         let paper = Paper::new(&pairs);
-        paper.print();
         let paper = paper.fold_vertically(7);
-        paper.print();
         let paper = paper.fold_horiontally(5);
         paper.print();
     }

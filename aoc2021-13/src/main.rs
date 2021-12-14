@@ -9,8 +9,8 @@ fn main() {
     part_two(&input);
 }
 
-fn part_one(input: &String) {
-    let inputs = split_input_by_blankline(&input);
+fn part_one(input: &str) {
+    let inputs = split_input_by_blankline(input);
     let pairs = get_pairs(&inputs[0]);
     let paper = Paper::new(&pairs);
     // fold along x=655
@@ -18,8 +18,8 @@ fn part_one(input: &String) {
     dbg!(paper.count_visible_dots());
 }
 
-fn part_two(input: &String) {
-    let inputs = split_input_by_blankline(&input);
+fn part_two(input: &str) {
+    let inputs = split_input_by_blankline(input);
     let pairs = get_pairs(&inputs[0]);
     let instructions = get_folding_directions(&inputs[1]);
 
@@ -89,7 +89,7 @@ impl Paper {
                 .fold("".to_string(), |acc, x| acc + &x.to_string());
             println!("{}", text);
         }
-        println!("");
+        println!();
     }
 
     fn count_visible_dots(&self) -> u32 {
@@ -152,7 +152,7 @@ impl Paper {
     }
 }
 
-fn split_input_by_blankline(input: &String) -> Vec<String> {
+fn split_input_by_blankline(input: &str) -> Vec<String> {
     input
         .split("\n\n")
         .map(|string| string.to_string())

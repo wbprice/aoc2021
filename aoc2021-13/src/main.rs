@@ -34,7 +34,7 @@ fn build_paper(pairs: &[Vec<u8>]) -> Paper {
     })
 }
 
-fn print_paper(paper: Paper) {
+fn print_paper(paper: &Paper) {
     let mut print: Vec<String> = vec![];
     let mut x = 0;
     let mut y = 0;
@@ -63,6 +63,63 @@ fn print_paper(paper: Paper) {
         print.push(text);
     }
     dbg!(print);
+}
+
+enum FoldDirection {
+    X,
+    Y,
+}
+
+fn fold_paper(paper: Paper, direction: FoldDirection, fold_at: u8) -> Paper {
+    let mut x = 0;
+    let mut y = 0;
+
+    paper.clone().into_keys().for_each(|pair| {
+        if pair.0 > x {
+            x = pair.0;
+        }
+        if pair.1 > y {
+            y = pair.1;
+        }
+    });
+
+    match direction {
+        FoldDirection::X => {
+            let mut output = Paper::new();
+            for cell_y in 0..y + 1 {
+                for cell_x in 0..x + 1 {
+                    // For columns left of the fold
+                    // y is always the same
+                    if paper.get(&(cell_x, cell_y)).is_some() {
+                        if cell_x < fold_at {
+                            output.insert((cell_x, cell_y), '#');
+                        } else {
+                            output.insert((x - cell_x, cell_y), '#');
+                        }
+                    }
+                }
+            }
+            output
+        }
+        FoldDirection::Y => {
+            let mut output = Paper::new();
+            for cell_y in 0..y + 1 {
+                for cell_x in 0..x + 1 {
+                    // For rows above the fold
+                    // x is always the same
+                    if paper.get(&(cell_x, cell_y)).is_some() {
+                        if cell_y < fold_at {
+                            output.insert((cell_x, cell_y), '#');
+                        } else {
+                            // When flipped
+                            output.insert((cell_x, y - cell_y), '#');
+                        }
+                    }
+                }
+            }
+            output
+        }
+    }
 }
 
 #[cfg(test)]
@@ -111,6 +168,28 @@ fold along x=5"#;
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
         let paper = build_paper(&pairs);
-        print_paper(paper);
+        print_paper(&paper);
+    }
+
+    #[test]
+    fn it_folds_the_paper_vertically() {
+        let inputs = split_input_by_blankline(INPUT);
+        let pairs = get_pairs(&inputs[0]);
+        let paper = build_paper(&pairs);
+        print_paper(&paper);
+        let paper = fold_paper(paper, FoldDirection::Y, 7);
+        print_paper(&paper);
+    }
+
+    #[test]
+    fn it_folds_the_paper_horizontally() {
+        let inputs = split_input_by_blankline(INPUT);
+        let pairs = get_pairs(&inputs[0]);
+        let paper = build_paper(&pairs);
+        print_paper(&paper);
+        let paper = fold_paper(paper, FoldDirection::Y, 7);
+        print_paper(&paper);
+        let paper = fold_paper(paper, FoldDirection::X, 5);
+        print_paper(&paper);
     }
 }

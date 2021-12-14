@@ -51,7 +51,7 @@ impl Paper {
         }
     }
 
-    fn fold_horizontally(&self, fold_at: u8) -> Paper {
+    fn fold_at_y(&self, fold_at: u8) -> Paper {
         let mut content = HashMap::new();
         for y in 0..self.rows + 1 {
             for x in 0..self.columns + 1 {
@@ -70,12 +70,12 @@ impl Paper {
 
         Paper {
             columns: self.columns,
-            rows: self.rows / 2,
+            rows: self.rows / 2 - 1,
             content,
         }
     }
 
-    fn fold_vertically(&self, fold_at: u8) -> Paper {
+    fn fold_at_x(&self, fold_at: u8) -> Paper {
         let mut content = HashMap::new();
         for y in 0..self.rows + 1 {
             for x in 0..self.columns + 1 {
@@ -92,7 +92,7 @@ impl Paper {
         }
 
         Paper {
-            columns: self.columns / 2,
+            columns: self.columns / 2 - 1,
             rows: self.rows,
             content,
         }
@@ -176,7 +176,7 @@ fold along x=5"#;
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
         let paper = Paper::new(&pairs);
-        let paper = paper.fold_horizontally(7);
+        let paper = paper.fold_at_y(7);
         paper.print()
     }
 
@@ -185,8 +185,8 @@ fold along x=5"#;
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
         let paper = Paper::new(&pairs);
-        let paper = paper.fold_horizontally(7);
-        let paper = paper.fold_vertically(5);
+        let paper = paper.fold_at_y(7);
+        let paper = paper.fold_at_x(5);
         paper.print();
     }
 }

@@ -34,6 +34,7 @@ impl Paper {
     }
 
     fn print(&self) {
+        println!("{} x {} Paper", self.columns + 1, self.rows + 1);
         for y in 0..self.rows + 1 {
             let mut row = vec![];
             for x in 0..self.columns + 1 {
@@ -49,6 +50,7 @@ impl Paper {
                 .fold("".to_string(), |acc, x| acc + &x.to_string());
             println!("{}", text);
         }
+        println!("");
     }
 
     fn fold_at_y(&self, fold_at: u8) -> Paper {
@@ -159,8 +161,8 @@ fold along x=5"#;
     fn it_builds_the_gridded_map() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
-        let paper = Paper::new(&pairs);
-        dbg!(&paper);
+        Paper::new(&pairs);
+        assert!(true);
     }
 
     #[test]
@@ -169,10 +171,11 @@ fold along x=5"#;
         let pairs = get_pairs(&inputs[0]);
         let paper = Paper::new(&pairs);
         paper.print();
+        assert!(true);
     }
 
     #[test]
-    fn it_folds_the_paper_horizontally() {
+    fn it_folds_the_paper_at_y() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
         let paper = Paper::new(&pairs);
@@ -181,7 +184,7 @@ fold along x=5"#;
     }
 
     #[test]
-    fn it_folds_the_paper_vertically() {
+    fn it_folds_the_paper_at_x() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
         let paper = Paper::new(&pairs);

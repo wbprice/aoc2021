@@ -2,7 +2,144 @@ use std::collections::HashMap;
 
 type Pair = Vec<u8>;
 type Fold = String;
-type Paper = HashMap<(u8, u8), char>;
+
+#[derive(Debug)]
+struct Paper {
+    columns: u8,
+    rows: u8,
+    content: HashMap<(u8, u8), char>,
+}
+
+impl Paper {
+    fn new(pairs: &[Vec<u8>]) -> Self {
+        let mut columns = 0;
+        let mut rows = 0;
+        for pair in pairs {
+            if pair[0] > columns {
+                columns = pair[0];
+            }
+            if pair[1] > rows {
+                rows = pair[1];
+            }
+        }
+
+        Paper {
+            rows,
+            columns,
+            content: pairs.iter().fold(HashMap::new(), |mut acc, pair| {
+                acc.insert((pair[0], pair[1]), '#');
+                acc
+            }),
+        }
+    }
+
+    fn print(&self) {
+        for y in 0..self.rows + 1 {
+            let mut row = vec![];
+            for x in 0..self.columns + 1 {
+                match self.content.get(&(x, y)) {
+                    Some(_) => {
+                        row.push('#');
+                    }
+                    None => row.push('.'),
+                }
+            }
+            let text: String = row
+                .iter()
+                .fold("".to_string(), |acc, x| acc + &x.to_string());
+            println!("{}", text);
+        }
+    }
+
+    fn fold_horiontally(&self, fold_at: u8) -> Paper {
+        let mut content = HashMap::new();
+        for y in 0..self.rows + 1 {
+            for x in 0..self.columns + 1 {
+                if self.content.get(&(x, y)).is_some() {
+                    // For rows above the fold
+                    // x is the same as before
+                    if y < fold_at {
+                        content.insert((x, y), '#');
+                    } else {
+                        // When under the fold, y is mirrored from the fold line
+                        content.insert((x, self.rows - y), '#');
+                    }
+                }
+            }
+        }
+
+        /*
+        for cell_y in 0..y + 1 {
+-                for cell_x in 0..x + 1 {
+-                    // For rows above the fold
+-                    // x is always the same
+-                    if paper.get(&(cell_x, cell_y)).is_some() {
+-                        if cell_y < fold_at {
+-                            output.insert((cell_x, cell_y), '#');
+-                        } else {
+-                            // When flipped
+-                            output.insert((cell_x, y - cell_y), '#');
+-                        }
+-                    }
+-                }
+-            }
+-            output
+
+        */
+        /*
+
+        */
+
+        Paper {
+            columns: self.columns - 1 / 2,
+            rows: self.rows,
+            content,
+        }
+    }
+
+    fn fold_vertically(&self, fold_at: u8) -> Paper {
+        let mut content = HashMap::new();
+        for y in 0..self.rows + 1 {
+            for x in 0..self.columns + 1 {
+                // For columns left of the fold
+                // y is always the same
+                if self.content.get(&(x, y)).is_some() {
+                    if x < fold_at {
+                        content.insert((x, y), '#');
+                    } else {
+                        content.insert((self.columns - x, y), '#');
+                    }
+                }
+            }
+        }
+        
+        /*
+                let mut output = Paper::new();
+-            for cell_y in 0..y + 1 {
+-                for cell_x in 0..x + 1 {
+-                    // For columns left of the fold
+-                    // y is always the same
+-                    if paper.get(&(cell_x, cell_y)).is_some() {
+-                        if cell_x < fold_at {
+-                            output.insert((cell_x, cell_y), '#');
+-                        } else {
+-                            output.insert((x - cell_x, cell_y), '#');
+-                        }
+-                    }
+-                }
+-            }
+-            output
+
+        */
+
+
+        Paper {
+            columns: self.columns,
+            rows: self.rows - 1 / 2,
+            content,
+        }
+    }
+}
 
 fn main() {
     println!("Hello, world!");
@@ -25,101 +162,6 @@ fn get_pairs(input: &str) -> Vec<Pair> {
                 .collect()
         })
         .collect()
-}
-
-fn build_paper(pairs: &[Vec<u8>]) -> Paper {
-    pairs.iter().fold(HashMap::new(), |mut acc, pair| {
-        acc.insert((pair[0], pair[1]), '#');
-        acc
-    })
-}
-
-fn print_paper(paper: &Paper) {
-    let mut print: Vec<String> = vec![];
-    let mut x = 0;
-    let mut y = 0;
-    paper.clone().into_keys().for_each(|pair| {
-        if pair.0 > x {
-            x = pair.0;
-        }
-        if pair.1 > y {
-            y = pair.1;
-        }
-    });
-
-    for y in 0..y + 1 {
-        let mut row = vec![];
-        for x in 0..x + 1 {
-            match paper.get(&(x, y)) {
-                Some(_) => {
-                    row.push('#');
-                }
-                None => row.push('.'),
-            }
-        }
-        let text: String = row
-            .iter()
-            .fold("".to_string(), |acc, x| acc + &x.to_string());
-        print.push(text);
-    }
-    dbg!(print);
-}
-
-enum FoldDirection {
-    X,
-    Y,
-}
-
-fn fold_paper(paper: Paper, direction: FoldDirection, fold_at: u8) -> Paper {
-    let mut x = 0;
-    let mut y = 0;
-
-    paper.clone().into_keys().for_each(|pair| {
-        if pair.0 > x {
-            x = pair.0;
-        }
-        if pair.1 > y {
-            y = pair.1;
-        }
-    });
-
-    match direction {
-        FoldDirection::X => {
-            let mut output = Paper::new();
-            for cell_y in 0..y + 1 {
-                for cell_x in 0..x + 1 {
-                    // For columns left of the fold
-                    // y is always the same
-                    if paper.get(&(cell_x, cell_y)).is_some() {
-                        if cell_x < fold_at {
-                            output.insert((cell_x, cell_y), '#');
-                        } else {
-                            output.insert((x - cell_x, cell_y), '#');
-                        }
-                    }
-                }
-            }
-            output
-        }
-        FoldDirection::Y => {
-            let mut output = Paper::new();
-            for cell_y in 0..y + 1 {
-                for cell_x in 0..x + 1 {
-                    // For rows above the fold
-                    // x is always the same
-                    if paper.get(&(cell_x, cell_y)).is_some() {
-                        if cell_y < fold_at {
-                            output.insert((cell_x, cell_y), '#');
-                        } else {
-                            // When flipped
-                            output.insert((cell_x, y - cell_y), '#');
-                        }
-                    }
-                }
-            }
-            output
-        }
-    }
 }
 
 #[cfg(test)]
@@ -159,37 +201,36 @@ fold along x=5"#;
     fn it_builds_the_gridded_map() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
-        let output = build_paper(&pairs);
-        dbg!(&output);
+        let paper = Paper::new(&pairs);
+        dbg!(&paper);
     }
 
     #[test]
     fn it_prints_the_paper() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
-        let paper = build_paper(&pairs);
-        print_paper(&paper);
+        let paper = Paper::new(&pairs);
+        paper.print();
     }
 
     #[test]
     fn it_folds_the_paper_vertically() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
-        let paper = build_paper(&pairs);
-        print_paper(&paper);
-        let paper = fold_paper(paper, FoldDirection::Y, 7);
-        print_paper(&paper);
+        let paper = Paper::new(&pairs);
+        let paper = paper.fold_vertically(7);
+        paper.print()
     }
 
     #[test]
     fn it_folds_the_paper_horizontally() {
         let inputs = split_input_by_blankline(INPUT);
         let pairs = get_pairs(&inputs[0]);
-        let paper = build_paper(&pairs);
-        print_paper(&paper);
-        let paper = fold_paper(paper, FoldDirection::Y, 7);
-        print_paper(&paper);
-        let paper = fold_paper(paper, FoldDirection::X, 5);
-        print_paper(&paper);
+        let paper = Paper::new(&pairs);
+        paper.print();
+        let paper = paper.fold_vertically(7);
+        paper.print();
+        let paper = paper.fold_horiontally(5);
+        paper.print();
     }
 }

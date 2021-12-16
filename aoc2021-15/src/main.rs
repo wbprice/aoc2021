@@ -184,7 +184,7 @@ mod tests {
 
         let risk_map = build_risk_map(&input, &(0, 0));
         let output = shortest_path(&(0, 0), &(9, 9), &risk_map);
-        dbg!(output);
+        assert_eq!(output, Some(40));
     }
 
     #[test]
@@ -208,6 +208,6 @@ mod tests {
 
         let risk_map = build_bigger_risk_map(&input, 5, 5);
         let output = shortest_path(&(0, 0), &(49, 49), &risk_map);
-        dbg!(output);
+        assert_eq!(output, Some(315));
     }
 }

@@ -61,6 +61,7 @@ fn build_risk_map(input: &[String], tile: &Position) -> RiskMap {
             // The danger generally increases the farther away from the origin the sub is
             let danger = column.to_digit(10).unwrap() as i32;
             let danger_bonus = tile.0.abs() + tile.1.abs();
+            // Big risk maps get tiled
             let x_bonus = tile.0.abs() * columns;
             let y_bonus = tile.1.abs() * rows;
             let x = x as i32 + x_bonus;

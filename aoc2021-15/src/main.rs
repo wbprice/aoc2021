@@ -119,7 +119,6 @@ fn shortest_path(start: &Position, finish: &Position, risk_map: &RiskMap) -> Opt
     if let Some(value) = dist.get_mut(start) {
         *value = 0;
     }
-
     heap.push(State {
         cost: 0,
         position: *start,

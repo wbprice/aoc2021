@@ -127,7 +127,7 @@ fn parse_operator_packet(packet: &str) -> Packet {
     }
 
     Packet {
-        length: subpackets.iter().fold(0, |acc, packet| acc + packet.length),
+        length: packet.len(),
         version: parse_packet_version(&packet),
         type_id: parse_packet_type_id(&packet),
         contents: None,
@@ -225,5 +225,10 @@ mod tests {
         assert_eq!(output, "110100101111111000101000");
     }
 
-
+    #[test]
+    fn it_handles_nested_operator_packets() {
+        let packet = hexadecimal_to_binary("8A004A801A8002F478");
+        let packet = parse_operator_packet(&packet);
+        dbg!(packet);
+    }
 }

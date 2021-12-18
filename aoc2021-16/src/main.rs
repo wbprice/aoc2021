@@ -4,6 +4,7 @@ fn main() {
     let input = fs::read_to_string("input").expect("Couldn't read the input");
     let binary = hexadecimal_to_binary(&input);
     let packet = parse_packet(&binary);
+    dbg!(&packet);
 
     let version_sum = sum_packet_versions(packet);
     dbg!(version_sum);
@@ -131,6 +132,128 @@ fn sum_packet_versions(packet: Packet) -> usize {
     output
 }
 
+fn evaluate_packet(packet: Packet) -> usize {
+    let mut output = 0;
+    match packet.type_id {
+        // addition
+        // sum the packet contents
+        0 => {
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        output += binary_to_decimal(&content);
+                    } else {
+                        output += evaluate_packet(subpacket);
+                    }
+                }
+            }
+        }
+        // multiplication
+        // multiply the packet contents
+        1 => {
+            // can't multiply anything by 0
+            output = 1;
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        output *= binary_to_decimal(&content);
+                    } else {
+                        output *= evaluate_packet(subpacket);
+                    }
+                }
+            }
+        }
+        // minimum
+        // get the minimum value of the packet contents
+        2 => {
+            let mut values = vec![];
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        values.push(binary_to_decimal(&content));
+                    } else {
+                        values.push(evaluate_packet(subpacket));
+                    }
+                }
+            }
+            output = *values.iter().min().unwrap();
+        }
+        // maximum
+        // get the maximum value of the packet contents
+        3 => {
+            let mut values = vec![];
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        values.push(binary_to_decimal(&content));
+                    } else {
+                        values.push(evaluate_packet(subpacket));
+                    }
+                }
+            }
+            output = *values.iter().max().unwrap();
+        }
+        // literal
+        // literal value
+        4 => {
+            unimplemented!("Evaluating literal values is unimplemented");
+        }
+        // greater than
+        // return 1 if the first packet value is greater than the second
+        5 => {
+            let mut values = vec![];
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        values.push(binary_to_decimal(&content));
+                    } else {
+                        values.push(evaluate_packet(subpacket));
+                    }
+                }
+            }
+            let first = values.get(0).expect("The first value couldn't be found");
+            let second = values.get(1).expect("The first value couldn't be found");
+            output = if first > second { 1 } else { 0 }
+        }
+        // less than
+        // return 1 if the first packet value is less than the second
+        6 => {
+            let mut values = vec![];
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        values.push(binary_to_decimal(&content));
+                    } else {
+                        values.push(evaluate_packet(subpacket));
+                    }
+                }
+            }
+            let first = values.get(0).expect("The first value couldn't be found");
+            let second = values.get(1).expect("The first value couldn't be found");
+            output = if first < second { 1 } else { 0 }
+        }
+        // equality
+        // return 1 if the value of the first subpacket is equal to that of the second
+        7 => {
+            let mut values = vec![];
+            if let Some(subpackets) = packet.subpackets {
+                for subpacket in subpackets {
+                    if let Some(content) = subpacket.content {
+                        values.push(binary_to_decimal(&content));
+                    } else {
+                        values.push(evaluate_packet(subpacket));
+                    }
+                }
+            }
+            let first = values.get(0).expect("The first value couldn't be found");
+            let second = values.get(1).expect("The first value couldn't be found");
+            output = if first == second { 1 } else { 0 }
+        }
+        _ => unreachable!(),
+    }
+    output
+}
+
 fn hexadecimal_to_binary(hex: &str) -> String {
     hex.chars().fold("".to_string(), |acc, c| {
         let value = match c {
@@ -154,6 +277,10 @@ fn hexadecimal_to_binary(hex: &str) -> String {
         };
         acc + value
     })
+}
+
+fn binary_to_decimal(binary: &str) -> usize {
+    usize::from_str_radix(binary, 2).unwrap()
 }
 
 #[cfg(test)]
@@ -232,5 +359,77 @@ mod tests {
         let packet = parse_packet(&binary);
         let version_sum = sum_packet_versions(packet);
         assert_eq!(version_sum, 31);
+    }
+
+    #[test]
+    fn it_sums_subpackets() {
+        let hex = "C200B40A82";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let sum = evaluate_packet(packet);
+        assert_eq!(sum, 3);
+    }
+
+    #[test]
+    fn it_multiplies_subpackets() {
+        let hex = "04005AC33890";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let product = evaluate_packet(packet);
+        assert_eq!(product, 54);
+    }
+
+    #[test]
+    fn it_finds_the_minimum_value_of_subpackets() {
+        let hex = "880086C3E88112";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let product = evaluate_packet(packet);
+        assert_eq!(product, 7);
+    }
+
+    #[test]
+    fn it_finds_the_maximum_value_of_subpackets() {
+        let hex = "CE00C43D881120";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let product = evaluate_packet(packet);
+        assert_eq!(product, 9);
+    }
+
+    #[test]
+    fn it_returns_1_if_the_first_packet_is_less_than_the_second() {
+        let hex = "D8005AC2A8F0";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let lt = evaluate_packet(packet);
+        assert_eq!(lt, 1);
+    }
+
+    #[test]
+    fn it_returns_0_if_the_first_packet_is_not_greater_than_the_second() {
+        let hex = "F600BC2D8F";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let gt = evaluate_packet(packet);
+        assert_eq!(gt, 0);
+    }
+
+    #[test]
+    fn it_returns_0_when_the_first_packet_is_not_equal_to_the_second() {
+        let hex = "9C005AC2F8F0";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let et = evaluate_packet(packet);
+        assert_eq!(et, 0);
+    }
+
+    #[test]
+    fn it_handles_nested_operators() {
+        let hex = "9C0141080250320F1802104A08";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let et = evaluate_packet(packet);
+        assert_eq!(et, 1);
     }
 }

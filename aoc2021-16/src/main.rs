@@ -1,68 +1,134 @@
+use std::fs;
+
 fn main() {
-    println!("Hello, world!");
+    let input = fs::read_to_string("input").expect("Couldn't read the input");
+    let binary = hexadecimal_to_binary(&input);
+    let packet = parse_packet(&binary);
+
+    let version_sum = sum_packet_versions(packet);
+    dbg!(version_sum);
 }
 
 #[derive(Debug)]
 struct Packet {
-    raw: String,
-    length_type: Option<usize>,
     version: usize,
     type_id: usize,
-    contents: Option<String>,
+    length_type_id: Option<usize>,
+    raw: String,
     bits: usize,
+    content: Option<String>,
     subpackets: Option<Vec<Packet>>,
 }
 
-fn parse_packet_version(packet: &str) -> usize {
-    usize::from_str_radix(&packet[0..3], 2).unwrap()
-}
+fn parse_packet(input: &str) -> Packet {
+    let version = usize::from_str_radix(&input[..3], 2).unwrap(); // bits 0-3
+    let type_id = usize::from_str_radix(&input[3..6], 2).unwrap(); // bits 3-6
 
-// Type 4 - Literal
-// Other types - operator
-fn parse_packet_type_id(packet: &str) -> usize {
-    usize::from_str_radix(&packet[3..6], 2).unwrap()
-}
+    if type_id == 4 {
+        // A literal value
+        let mut content = "".to_string();
+        // bits_read starts 6 to account for the version and type id headers
+        let mut bits_read = 6;
+        loop {
+            // Get the done bit
+            let done = input
+                .chars()
+                .nth(bits_read)
+                .expect("Couldn't get the first bit of a literal chunk.")
+                == '0';
+            bits_read += 1;
+            let value = &input[bits_read..bits_read + 4];
+            bits_read += 4;
+            content += value;
+            if done {
+                break;
+            }
+        }
 
-fn parse_length_type_id(packet: &str) -> usize {
-    match &packet.chars().nth(6) {
-        Some('1') => 1,
-        Some('0') => 0,
-        _ => {
-            unimplemented!("Can't parse a length type of this type");
+        return Packet {
+            version,
+            type_id,
+            bits: bits_read,
+            raw: input[..bits_read].to_string(),
+            content: Some(content),
+            subpackets: None,
+            length_type_id: None,
+        };
+    } else {
+        // This is an operator packet
+        let length_type_id = if input.chars().nth(6).unwrap() == '1' {
+            1
+        } else {
+            0
+        };
+        // bits_read starts at 7 to account for the version, type_id, and length_type_id headers
+        let mut bits_read = 7;
+
+        // are we looking for subpackets by bits or by count?
+        if length_type_id == 0 {
+            // the next 15 bits represent the number of bits in the subpackets
+            let subpackets_end =
+                usize::from_str_radix(&input[bits_read..bits_read + 15], 2).unwrap();
+            bits_read += 15;
+            let packet_end = bits_read + subpackets_end;
+
+            // Parse all the subpackets
+            let mut subpackets = vec![];
+            while bits_read < packet_end {
+                let subpacket = parse_packet(&input[bits_read..]);
+                bits_read += subpacket.bits;
+                subpackets.push(subpacket);
+            }
+
+            // Return the packet
+            return Packet {
+                version,
+                type_id,
+                length_type_id: Some(length_type_id),
+                content: None,
+                subpackets: Some(subpackets),
+                raw: input[..packet_end].to_string(),
+                bits: packet_end,
+            };
+        } else {
+            // the next 11 bits encode the number of subpackets
+            let subpacket_count =
+                usize::from_str_radix(&input[bits_read..bits_read + 11], 2).unwrap();
+            bits_read += 11;
+
+            // Parse all the subpackets
+            let mut subpackets = vec![];
+            while subpackets.len() < subpacket_count {
+                let subpacket = parse_packet(&input[bits_read..]);
+                bits_read += subpacket.bits;
+                subpackets.push(subpacket);
+            }
+
+            // Return the packet
+            return Packet {
+                version,
+                type_id,
+                length_type_id: Some(length_type_id),
+                content: None,
+                subpackets: Some(subpackets),
+                raw: input[..bits_read].to_string(),
+                bits: bits_read,
+            };
         }
     }
 }
 
-fn parse_type_id_4_packet_contents(packet: &str) -> (String, usize) {
-    let mut content = "".to_string();
-    let mut bits_read = 6;
-    loop {
-        // read 5 bit chunks
-        // The signal to continue or quit is the first bit
-        // The data is the following 4 bits
-        let chunk = &packet[bits_read..bits_read + 5];
-        let last_chunk = &chunk.chars().next().unwrap() == &'0';
-        content += &chunk[1..];
-        bits_read += 5;
-        if last_chunk {
-            break;
+fn sum_packet_versions(packet: Packet) -> usize {
+    let mut output = 0;
+    output += packet.version;
+
+    if let Some(subpackets) = packet.subpackets {
+        for subpacket in subpackets {
+            output += sum_packet_versions(subpacket);
         }
     }
 
-    // // Account for any 0 padding
-    // while bits_read % 4 > 0 {
-    //     bits_read += 1;
-    // }
-
-    (content, bits_read)
-}
-
-fn parse_operator_packet_length_type_0_bit_length(packet: &str) -> usize {
-    usize::from_str_radix(&packet[7..22], 2).unwrap()
-}
-
-fn parse_operator_packet_length_type_1_subpackets_count(packet: &str) -> usize {
-    usize::from_str_radix(&packet[7..18], 2).unwrap()
+    output
 }
 
 fn hexadecimal_to_binary(hex: &str) -> String {
@@ -90,192 +156,81 @@ fn hexadecimal_to_binary(hex: &str) -> String {
     })
 }
 
-fn sum_packet_versions(packets: Vec<Packet>, memo: u32) -> u32 {
-    let mut output = 0;
-
-    for packet in packets {
-        output += packet.version as u32;
-
-        if let Some(subpackets) = packet.subpackets {
-            output += sum_packet_versions(subpackets, output);
-        }
-    }
-
-    output
-}
-
-fn parse_packets(packet: &str) -> Vec<Packet> {
-    let version = parse_packet_version(packet);
-    let type_id = parse_packet_type_id(packet);
-    let mut output: Vec<Packet> = vec![];
-
-    // Is this an literal value packet or an operator packet?
-    if type_id == 4 {
-        // A literal packet
-        let (contents, bits_read) = parse_type_id_4_packet_contents(&packet);
-        output.push(Packet {
-            version,
-            type_id,
-            contents: Some(contents),
-            subpackets: None,
-            bits: bits_read,
-            raw: packet[0..bits_read].to_string(),
-            length_type: None,
-        });
-    } else {
-        // An operator packet
-        // Does this packet have length type 0 or 1?
-        let length_type = parse_length_type_id(packet);
-        if length_type == 0 {
-            // length type 0
-            // The next n bits have subpackets
-            // Read subpackets until enough bits have been read
-            let subpackets_bits = parse_operator_packet_length_type_0_bit_length(&packet);
-            let subpackets_last_bit = subpackets_bits + 22;
-            let subpackets_slice = &packet[22..subpackets_last_bit];
-            let mut bits_read = 0;
-            let mut subpackets: Vec<Packet> = vec![];
-
-            while bits_read < subpackets_bits {
-                let mut packets = parse_packets(&subpackets_slice[bits_read..]);
-                bits_read += packets.iter().fold(0, |acc, p| acc + p.bits);
-                subpackets.append(&mut packets);
-            }
-
-            output.push(Packet {
-                version,
-                type_id,
-                contents: None,
-                length_type: Some(length_type),
-                subpackets: Some(subpackets),
-                bits: bits_read,
-                raw: subpackets_slice.to_string(),
-            });
-        } else {
-            // length type 1
-            // The next set of bits has a number of subpackets
-            // Read subpackets until enough subpackets have been read
-            let subpackets_count = parse_operator_packet_length_type_1_subpackets_count(&packet);
-            let subpackets_slice = &packet[18..];
-            let mut packets_read = 0;
-            let mut bits_read = 0;
-            let mut subpackets: Vec<Packet> = vec![];
-
-            while packets_read < subpackets_count {
-                let mut packets = parse_packets(&subpackets_slice[bits_read..]);
-                bits_read += packets.iter().fold(0, |acc, p| acc + p.bits);
-                packets_read += packets.len();
-                subpackets.append(&mut packets);
-            }
-
-            // Account for any 0 padding
-            while bits_read % 4 > 0 {
-                bits_read += 1;
-            }
-
-            output.push(Packet {
-                version,
-                type_id,
-                length_type: Some(length_type),
-                contents: None,
-                subpackets: Some(subpackets),
-                bits: bits_read,
-                raw: subpackets_slice.to_string(),
-            });
-        }
-    }
-
-    output
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn it_parses_packet_versions() {
-        let packet = "110100101111111000101000".to_string();
-        let version = parse_packet_version(&packet);
-        assert_eq!(version, 6);
+    fn it_parses_a_type_id_4_packet() {
+        let hex = "D2FE28";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        assert_eq!(packet.content, Some("011111100101".to_string()));
+        assert_eq!(packet.bits, 21);
+        assert_eq!(packet.raw, "110100101111111000101".to_string());
     }
 
     #[test]
-    fn it_parses_packet_type_ids() {
-        let packet = "110100101111111000101000".to_string();
-        let type_id = parse_packet_type_id(&packet);
-        assert_eq!(type_id, 4);
+    fn it_parses_a_type_id_6_packet_with_length_type_id_0() {
+        let hex = "38006F45291200";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let subpackets = packet.subpackets.unwrap();
+        assert_eq!(packet.version, 1);
+        assert_eq!(packet.type_id, 6);
+        assert_eq!(packet.length_type_id, Some(0));
+        assert_eq!(subpackets[0].content, Some("1010".to_string()));
+        assert_eq!(subpackets[1].content, Some("00010100".to_string()));
     }
 
     #[test]
-    fn it_parses_packet_type_id_4() {
-        let packet = hexadecimal_to_binary("D2FE28");
-        let packets = parse_packets(&packet);
-        assert_eq!(packets[0].contents, Some("011111100101".to_string()));
-    }
-
-    #[test]
-    fn it_parses_length_type_id_of_an_operator_packet() {
-        let packet = hexadecimal_to_binary("38006F45291200");
-        let length_type_id = parse_length_type_id(&packet);
-        assert_eq!(length_type_id, 0);
-    }
-
-    #[test]
-    fn it_parses_packet_type_id_6_with_length_type_id_0() {
-        let packet = hexadecimal_to_binary("38006F45291200");
-        let packets = parse_packets(&packet);
-        let subpackets = packets[0].subpackets.as_ref().unwrap();
-        assert_eq!(subpackets.len(), 2);
-        assert_eq!(subpackets[0].contents, Some("1010".to_string()));
-        assert_eq!(subpackets[1].contents, Some("00010100".to_string()));
-    }
-
-    #[test]
-    fn it_parses_packet_type_id_3_with_length_type_id_1() {
-        let packet = hexadecimal_to_binary("EE00D40C823060");
-        let packets = parse_packets(&packet);
-        dbg!(&packets);
-        let subpackets = packets[0].subpackets.as_ref().unwrap();
+    fn it_parses_a_type_id_3_packet_with_length_type_id_1() {
+        let hex = "EE00D40C823060";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let subpackets = packet.subpackets.unwrap();
+        assert_eq!(packet.version, 7);
+        assert_eq!(packet.type_id, 3);
+        assert_eq!(packet.length_type_id, Some(1));
         assert_eq!(subpackets.len(), 3);
+        assert_eq!(subpackets[0].content, Some("0001".to_string()));
+        assert_eq!(subpackets[1].content, Some("0010".to_string()));
+        assert_eq!(subpackets[2].content, Some("0011".to_string()));
     }
 
     #[test]
-    fn it_converts_hexadecimal_to_binary() {
-        let packet = "D2FE28";
-        let output = hexadecimal_to_binary(packet);
-        assert_eq!(output, "110100101111111000101000");
+    fn it_parses_nested_operator_packets() {
+        let hex = "8A004A801A8002F478";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let version_sum = sum_packet_versions(packet);
+        assert_eq!(version_sum, 16);
     }
 
     #[test]
-    fn it_sums_nested_packet_versions() {
-        let packet = hexadecimal_to_binary("8A004A801A8002F478");
-        let packets = parse_packets(&packet);
-        let sum = sum_packet_versions(packets, 0);
-        assert_eq!(sum, 16);
+    fn it_parses_treed_operator_packets_pt1() {
+        let hex = "620080001611562C8802118E34";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let version_sum = sum_packet_versions(packet);
+        assert_eq!(version_sum, 12);
     }
 
     #[test]
-    fn it_sums_packet_versions_v2() {
-        let packet = hexadecimal_to_binary("620080001611562C8802118E34");
-        let packets = parse_packets(&packet);
-        dbg!(&packets);
-        let sum = sum_packet_versions(packets, 0);
-        assert_eq!(sum, 12);
+    fn it_parses_treed_operator_packets_pt2() {
+        let hex = "C0015000016115A2E0802F182340";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let version_sum = sum_packet_versions(packet);
+        assert_eq!(version_sum, 23);
     }
 
     #[test]
-    fn it_sums_packet_versions_v3() {
-        let packet = hexadecimal_to_binary("C0015000016115A2E0802F182340");
-        let packets = parse_packets(&packet);
-        let sum = sum_packet_versions(packets, 0);
-        assert_eq!(sum, 23);
-    }
-
-    #[test]
-    fn it_sums_packet_versions_v4() {
-        let packet = hexadecimal_to_binary("A0016C880162017C3686B18A3D4780");
-        let packets = parse_packets(&packet);
-        let sum = sum_packet_versions(packets, 0);
-        assert_eq!(sum, 31);
+    fn it_parses_nested_operator_packets_with_several_literals() {
+        let hex = "A0016C880162017C3686B18A3D4780";
+        let binary = hexadecimal_to_binary(hex);
+        let packet = parse_packet(&binary);
+        let version_sum = sum_packet_versions(packet);
+        assert_eq!(version_sum, 31);
     }
 }

@@ -3,11 +3,14 @@ use std::fs;
 fn main() {
     let input = fs::read_to_string("input").expect("Couldn't read the input");
     let binary = hexadecimal_to_binary(&input);
-    let packet = parse_packet(&binary);
-    dbg!(&packet);
 
+    let packet = parse_packet(&binary);
     let version_sum = sum_packet_versions(packet);
     dbg!(version_sum);
+
+    let packet = parse_packet(&binary);
+    let output = evaluate_packet(packet);
+    dbg!(output);
 }
 
 #[derive(Debug)]
@@ -46,7 +49,7 @@ fn parse_packet(input: &str) -> Packet {
             }
         }
 
-        return Packet {
+        Packet {
             version,
             type_id,
             bits: bits_read,
@@ -54,7 +57,7 @@ fn parse_packet(input: &str) -> Packet {
             content: Some(content),
             subpackets: None,
             length_type_id: None,
-        };
+        }
     } else {
         // This is an operator packet
         let length_type_id = if input.chars().nth(6).unwrap() == '1' {
@@ -82,7 +85,7 @@ fn parse_packet(input: &str) -> Packet {
             }
 
             // Return the packet
-            return Packet {
+            Packet {
                 version,
                 type_id,
                 length_type_id: Some(length_type_id),
@@ -90,7 +93,7 @@ fn parse_packet(input: &str) -> Packet {
                 subpackets: Some(subpackets),
                 raw: input[..packet_end].to_string(),
                 bits: packet_end,
-            };
+            }
         } else {
             // the next 11 bits encode the number of subpackets
             let subpacket_count =
@@ -106,7 +109,7 @@ fn parse_packet(input: &str) -> Packet {
             }
 
             // Return the packet
-            return Packet {
+            Packet {
                 version,
                 type_id,
                 length_type_id: Some(length_type_id),
@@ -114,7 +117,7 @@ fn parse_packet(input: &str) -> Packet {
                 subpackets: Some(subpackets),
                 raw: input[..bits_read].to_string(),
                 bits: bits_read,
-            };
+            }
         }
     }
 }

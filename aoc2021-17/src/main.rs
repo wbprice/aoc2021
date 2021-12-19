@@ -4,6 +4,8 @@ fn main() {
     // target area: x=281..311, y=-74..-54
     let apex = find_highest_successful_arc_height((281..=311, -74..=-54));
     dbg!(apex);
+    let velocities_count = find_successful_velocities((281..=311, -74..=-54));
+    dbg!(velocities_count);
 }
 
 fn simulate_probe_arc(
@@ -67,7 +69,7 @@ fn get_apex_of_arc(arc: &[(i32, i32)]) -> i32 {
 fn find_highest_successful_arc_height(goal: (RangeInclusive<i32>, RangeInclusive<i32>)) -> i32 {
     // fuzz values between x 0 and 10 and y -10 and 10
     let mut heights = vec![];
-    for y in -0..1000 {
+    for y in 0..1000 {
         for x in 0..1000 {
             let arc = simulate_probe_arc((x, y), &goal);
             if check_probe_was_in_goal(&arc, &goal) {
@@ -78,6 +80,21 @@ fn find_highest_successful_arc_height(goal: (RangeInclusive<i32>, RangeInclusive
     }
 
     *heights.iter().max().unwrap()
+}
+
+fn find_successful_velocities(goal: (RangeInclusive<i32>, RangeInclusive<i32>)) -> i32 {
+    // fuzz values between x 0 and 10 and y -10 and 10
+    let mut velocities = vec![];
+    for y in -1000..1000 {
+        for x in 0..1000 {
+            let arc = simulate_probe_arc((x, y), &goal);
+            if check_probe_was_in_goal(&arc, &goal) {
+                velocities.push((x, y));
+            }
+        }
+    }
+
+    velocities.len() as i32
 }
 
 #[cfg(test)]
@@ -108,5 +125,11 @@ mod tests {
     fn it_finds_the_coolest_probe_shot() {
         let apex = find_highest_successful_arc_height((20..=30, -10..=-5));
         assert_eq!(apex, 45);
+    }
+
+    #[test]
+    fn it_finds_unique_good_velocities() {
+        let velocities = find_successful_velocities((20..=30, -10..=-5));
+        assert_eq!(velocities, 112);
     }
 }

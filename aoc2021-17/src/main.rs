@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 fn main() {
     // target area: x=281..311, y=-74..-54
-    let apex = find_highest_successful_arc_height((281..=311, -74..=-54), 100);
+    let apex = find_highest_successful_arc_height((281..=311, -74..=-54), 1000);
     dbg!(apex);
 }
 
@@ -54,7 +54,7 @@ fn find_highest_successful_arc_height(
 ) -> i32 {
     // fuzz values between x 0 and 10 and y -10 and 10
     let mut heights = vec![];
-    for y in -100..100 {
+    for y in -1000..1000 {
         for x in 0..1000 {
             let arc = simulate_probe_arc((x, y), max_steps);
             if check_probe_was_in_goal(&arc, &goal) {

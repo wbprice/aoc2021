@@ -69,7 +69,7 @@ fn get_apex_of_arc(arc: &[(i32, i32)]) -> i32 {
 fn find_highest_successful_arc_height(goal: (RangeInclusive<i32>, RangeInclusive<i32>)) -> i32 {
     // fuzz values between x 0 and 10 and y -10 and 10
     let mut heights = vec![];
-    for y in 0..1000 {
+    for y in 0..100 {
         for x in 0..1000 {
             let arc = simulate_probe_arc((x, y), &goal);
             if check_probe_was_in_goal(&arc, &goal) {
@@ -85,7 +85,7 @@ fn find_highest_successful_arc_height(goal: (RangeInclusive<i32>, RangeInclusive
 fn find_successful_velocities(goal: (RangeInclusive<i32>, RangeInclusive<i32>)) -> i32 {
     // fuzz values between x 0 and 10 and y -10 and 10
     let mut velocities = vec![];
-    for y in -1000..1000 {
+    for y in -100..100 {
         for x in 0..1000 {
             let arc = simulate_probe_arc((x, y), &goal);
             if check_probe_was_in_goal(&arc, &goal) {

@@ -147,6 +147,36 @@ fn polymerize_v2(
         })
 }
 
+fn polymerize_v3(polymer: &Polymer, steps: u64, rules: &PolymerRules) -> PolymerInventory {
+    let mut inventory = count_polymers(polymer);
+    for _ in 0..steps {
+        let mut output = PolymerInventory::new();
+        for polymer in inventory.clone().keys() {
+            if let Some(count) = inventory.get(polymer) {
+                if let Some(new_element) = rules.get(polymer) {
+                    let mut elements = polymer.chars();
+                    let left_polymer = format!("{}{}", elements.nth(0).unwrap(), new_element);
+                    let right_polymer = format!("{}{}", new_element, elements.nth(1).unwrap());
+
+                    if let Some(left_polymer) = inventory.get_mut(&left_polymer) {
+                        *left_polymer += count;
+                    } else {
+                        inventory.insert(left_polymer, *count);
+                    }
+
+                    if let Some(right_polymer) = inventory.get_mut(&right_polymer) {
+                        *right_polymer += count;
+                    } else {
+                        inventory.insert(right_polymer, *count);
+                    }
+
+                }
+            }
+        }
+    }
+    output
+}
+
 fn model_polymerization(polymer: &Polymer, steps: u64, rules: &PolymerRules) -> PolymerInventory {
     let polymer_inventory = count_polymers(&polymer);
     polymerize_v2(polymer.to_string(), steps, &rules, polymer_inventory)
@@ -202,5 +232,17 @@ CN -> C"#;
         let lowest = counts.first().unwrap();
         let difference = highest - lowest;
         assert_eq!(difference, 1588);
+    }
+
+    fn it_polymerizes_faster() {
+        let inputs = split_input_by_blankline(INPUT);
+        let polymer = &inputs[0].to_string();
+        let polymer_rules: Vec<String> =
+            inputs[1].split("\n").map(|line| line.to_string()).collect();
+            
+        let rules = get_polymer_rules(&polymer_rules);
+        let inventory = count_polymers(polymer); 
+
+        let output = polymerize_v3(inventory, rules);
     }
 }
